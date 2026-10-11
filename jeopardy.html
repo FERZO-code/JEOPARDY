@@ -78,7 +78,7 @@
   .topbar .acts{display:flex;gap:8px}
   .turn{text-align:center;font-weight:700;margin:2px 0 12px;color:var(--mute)}
   .turn b{color:var(--gold)}
-  .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:18px}
+  .board{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:8px;margin-bottom:18px}
   .board .head{
     background:linear-gradient(180deg,#1b3ef0,#0f27a8);border-bottom:5px solid var(--cc);border-radius:12px;
     padding:10px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:clamp(70px,11vh,120px)}
@@ -194,11 +194,11 @@ const CATEGORIES = [
   ['Quale frutto secco è l\'ingrediente base del pesto trapanese?','Le mandorle',['Le noci','I pistacchi','Le nocciole']],
   ['Quale spezia, tra le più costose al mondo, dà il colore giallo al risotto alla milanese?','Lo zafferano',['La curcuma','La paprika','La cannella']]]},
  {id:'cinema', em:'🎬', name:'Luci, Azione!', desc:'Film e attori', color:'#e63946', q:[
-  ['Come si chiama il pagliaccio assassino del romanzo/film "It"?','Pennywise',['Joker','Chucky','Freddy Krueger']],
-  ['Come si chiama il personaggio di Leonardo DiCaprio in "Titanic"?','Jack Dawson',['Cal Hockley','Jack Sparrow','Rose DeWitt']],
-  ['Chi ha diretto "Pulp Fiction"?','Quentin Tarantino',['Martin Scorsese','Steven Spielberg','Christopher Nolan']],
-  ['Quale film di Roberto Benigni ha vinto 3 Oscar nel 1999?','La vita è bella',['Il postino','Johnny Stecchino','Pinocchio']],
-  ['Quale film, insieme a "Ben-Hur" e "Titanic", ha vinto 11 Oscar?','Il Signore degli Anelli: Il ritorno del re',['Avatar','Il Gladiatore','Via col vento']]]},
+  ['Come si chiama il leone protagonista de "Il Re Leone"?','Simba',['Mufasa','Scar','Nala']],
+  ['In quale film si sente la frase "Io sono tuo padre"?','Star Wars: L\'Impero colpisce ancora',['Star Wars: Una nuova speranza','Star Wars: Il ritorno dello Jedi','Star Wars: La minaccia fantasma']],
+  ['Chi ha diretto "Jurassic Park" (1993)?','Steven Spielberg',['James Cameron','Ridley Scott','George Lucas']],
+  ['Chi ha diretto "Il Padrino"?','Francis Ford Coppola',['Martin Scorsese','Brian De Palma','Sidney Lumet']],
+  ['Quale film nel 2020 è stato il primo in lingua non inglese a vincere l\'Oscar come miglior film?','Parasite',['Joker','1917','Roma']]]},
  {id:'musica', em:'🎵', name:'Tutti a Ballare', desc:'Canzoni, band e note', color:'#c77dff', q:[
   ['Quale band ha cantato "Bohemian Rhapsody"?','I Queen',['I Beatles','I Rolling Stones','I Led Zeppelin']],
   ['Quale gruppo italiano ha vinto l\'Eurovision 2021 con "Zitti e buoni"?','I Måneskin',['I Negramaro','I Subsonica','I Pinguini Tattici Nucleari']],
@@ -206,17 +206,17 @@ const CATEGORIES = [
   ['Quanti tasti ha un pianoforte standard?','88',['76','92','100']],
   ['Come si chiama l\'opera di Puccini con protagonista Cio-Cio-San?','Madama Butterfly',['Tosca','La Bohème','Turandot']]]},
  {id:'geo', em:'🌍', name:'Giro del Mondo', desc:'Paesi, fiumi e capitali', color:'#2ec4b6', q:[
-  ['Qual è la capitale della Spagna?','Madrid',['Barcellona','Lisbona','Siviglia']],
-  ['Qual è il fiume più lungo d\'Italia?','Il Po',['Il Tevere','L\'Adige','L\'Arno']],
-  ['Qual è lo stato più piccolo del mondo?','La Città del Vaticano',['Monaco','San Marino','Il Liechtenstein']],
-  ['Qual è la capitale dell\'Australia?','Canberra',['Sydney','Melbourne','Perth']],
-  ['Qual è il lago più profondo del mondo, in Siberia?','Il lago Bajkal',['Il lago Superiore','Il lago Vittoria','Il lago Ladoga']]]},
+  ['Qual è la capitale della Germania?','Berlino',['Monaco','Francoforte','Amburgo']],
+  ['Qual è il continente più grande del mondo?','L\'Asia',['L\'Africa','L\'America','L\'Europa']],
+  ['In quale paese si trova il Machu Picchu?','Perù',['Bolivia','Messico','Colombia']],
+  ['Qual è la capitale del Canada?','Ottawa',['Toronto','Montréal','Vancouver']],
+  ['Qual è la montagna più alta dell\'Africa?','Il Kilimangiaro',['Il Monte Kenya','Il Ras Dashen','Il Toubkal']]]},
  {id:'storia', em:'🏛️', name:'Macchina del Tempo', desc:'Re, battaglie e imperi', color:'#d4a373', q:[
-  ['In che anno è caduto il Muro di Berlino?','1989',['1961','1979','1991']],
-  ['In che anno Cristoforo Colombo sbarcò in America?','1492',['1415','1519','1605']],
-  ['Chi fu il primo imperatore di Roma?','Augusto',['Giulio Cesare','Nerone','Traiano']],
-  ['Quale re di Francia era soprannominato "Re Sole"?','Luigi XIV',['Luigi XVI','Napoleone','Carlo Magno']],
-  ['Su quale isola morì in esilio Napoleone?','Sant\'Elena',['Elba','Corsica','Malta']]]},
+  ['Quale popolo costruì le piramidi di Giza?','Gli Egizi',['I Maya','I Romani','I Greci']],
+  ['In che anno è iniziata la Prima guerra mondiale?','1914',['1905','1918','1939']],
+  ['Chi fu il primo presidente degli Stati Uniti?','George Washington',['Abraham Lincoln','Thomas Jefferson','Benjamin Franklin']],
+  ['Quale re di Macedonia conquistò l\'Impero persiano?','Alessandro Magno',['Filippo II','Leonida','Pirro']],
+  ['In che anno cadde l\'Impero romano d\'Occidente?','476 d.C.',['410 d.C.','800 d.C.','1453 d.C.']]]},
  {id:'scienza', em:'🔬', name:'Piccoli Einstein', desc:'Scienza e natura', color:'#4cc9f0', q:[
   ['Quanti pianeti ha il Sistema Solare?','Otto',['Sette','Nove','Dieci']],
   ['Qual è il simbolo chimico dell\'oro?','Au',['Ag','Or','Go']],
@@ -272,11 +272,11 @@ const CATEGORIES = [
   ['In che anno è stato fondato YouTube?','2005',['2001','2008','2010']],
   ['Qual era il testo del primo SMS della storia, inviato nel 1992?','"Merry Christmas"',['"Hello World"','"Ciao"','"Test"']]]},
  {id:'arte', em:'🎨', name:'Piccoli Picasso', desc:'Pittori e capolavori', color:'#ef476f', q:[
-  ['Chi ha dipinto la Gioconda?','Leonardo da Vinci',['Raffaello','Michelangelo','Botticelli']],
-  ['Chi ha dipinto "Notte stellata"?','Vincent van Gogh',['Claude Monet','Paul Cézanne','Paul Gauguin']],
-  ['Chi ha dipinto "Guernica"?','Pablo Picasso',['Salvador Dalí','Joan Miró','Francisco Goya']],
-  ['Quale artista pop è famoso per le lattine di zuppa Campbell?','Andy Warhol',['Roy Lichtenstein','Keith Haring','Jackson Pollock']],
-  ['Quale pittore olandese ha dipinto "La ragazza con l\'orecchino di perla"?','Johannes Vermeer',['Rembrandt','Rubens','Jan van Eyck']]]},
+  ['Chi ha dipinto il soffitto della Cappella Sistina?','Michelangelo',['Raffaello','Leonardo da Vinci','Caravaggio']],
+  ['Chi ha dipinto "La nascita di Venere"?','Sandro Botticelli',['Tiziano','Giotto','Andrea Mantegna']],
+  ['A quale movimento artistico è legato Claude Monet?','Impressionismo',['Cubismo','Surrealismo','Futurismo']],
+  ['Quale artista catalano è famoso per gli orologi che si sciolgono?','Salvador Dalí',['Joan Miró','Pablo Picasso','Antoni Gaudí']],
+  ['Chi ha scolpito "Il Pensatore"?','Auguste Rodin',['Donatello','Antonio Canova','Constantin Brâncuși']]]},
  {id:'mito', em:'⚡', name:'Dei & Mostri', desc:'Mitologia classica', color:'#ffd166', q:[
   ['Chi è il dio greco del mare?','Poseidone',['Zeus','Ade','Apollo']],
   ['Quale eroe uccise il Minotauro nel labirinto di Creta?','Teseo',['Perseo','Ercole','Achille']],
@@ -296,11 +296,17 @@ const CATEGORIES = [
   ['Quale organo usa circa il 20% dell\'energia del corpo pur pesando solo il 2%?','Il cervello',['Il fegato','Il cuore','I polmoni']],
   ['Cleopatra visse più vicina nel tempo a...','Lo sbarco sulla Luna',['La costruzione della Grande Piramide','Sono equidistanti','Nessuno: Cleopatra è un mito']]]},
  {id:'nostalgia', em:'📼', name:'Anni 90 & 2000', desc:'Nostalgia canaglia', color:'#f15bb5', q:[
-  ['Come si chiamava il cucciolo digitale da accudire con tre pulsanti?','Tamagotchi',['Game Boy','Furby','Pokédex']],
-  ['Quale cantante ha urlato "...Baby One More Time"?','Britney Spears',['Christina Aguilera','Madonna','Shakira']],
-  ['Come si chiamava il programma di chat di Microsoft con il famoso "nudge"?','MSN Messenger',['Skype','ICQ','WhatsApp']],
-  ['In che anno l\'euro è entrato in circolazione in Italia?','2002',['1999','2000','2004']],
-  ['Chi ha vinto la prima edizione del Grande Fratello italiano (2000)?','Cristina Plevani',['Pietro Taricone','Marina La Rosa','Salvo Veneziano']]]},
+  ['Quale console portatile Nintendo ha reso famosi Tetris e Pokémon Rosso e Blu?','Game Boy',['PSP','Game Gear','Nintendo DS']],
+  ['Quale gruppo femminile ha cantato "Wannabe" nel 1996?','Spice Girls',['Destiny\'s Child','All Saints','Girls Aloud']],
+  ['In che anno è uscito al cinema "Harry Potter e la pietra filosofale"?','2001',['1999','2003','2005']],
+  ['Quale social network, lanciato nel 2003, dominava prima dell\'esplosione di Facebook?','MySpace',['Twitter','Instagram','TikTok']],
+  ['In che anno è arrivata in Europa la prima PlayStation?','1995',['1993','1997','1999']]]},
+ {id:'palestra', em:'🏋️', name:'Sudore & Ghisa', desc:'Palestra e allenamento', color:'#ff6b35', q:[
+  ['Come si chiama l\'esercizio in cui ci si solleva alla sbarra usando solo le braccia?','Trazioni',['Squat','Plank','Burpees']],
+  ['Quali muscoli lavora soprattutto lo squat?','Glutei e quadricipiti',['Pettorali e bicipiti','Dorsali e spalle','Addominali e polpacci']],
+  ['Come si chiama l\'esercizio in cui si resta fermi in posizione di spinta, appoggiati sugli avambracci?','Plank',['Crunch','Affondo','Burpee']],
+  ['Cosa sono i DOMS, i dolori che si sentono il giorno dopo un allenamento?','Dolore muscolare a insorgenza ritardata',['Dolori Ossei Muscolari Stagionali','Dieta Ottimale per Muscoli e Sport','Dopo Ogni Molla Sofferenza']],
+  ['Da quanti capi muscolari è composto il quadricipite?','Quattro',['Due','Tre','Cinque']]]},
  {id:'spazio', em:'🚀', name:'Oltre le Stelle', desc:'Pianeti e astronauti', color:'#5e60ce', q:[
   ['Quale pianeta è detto "il Pianeta Rosso"?','Marte',['Venere','Giove','Mercurio']],
   ['Chi è stato il primo uomo a camminare sulla Luna?','Neil Armstrong',['Buzz Aldrin','Yuri Gagarin','John Glenn']],
@@ -309,6 +315,7 @@ const CATEGORIES = [
   ['Come si chiama la luna più grande di Saturno?','Titano',['Europa','Encelado','Ganimede']]]}
 ];
 const POINTS = [100,200,300,400,500];
+const MIN_CATS = 3, MAX_CATS = 6;      // da 3 a 6 categorie a partita
 const TIME = 30;
 const KEY = 'jeopardy-night-v1';
 
@@ -376,14 +383,14 @@ function render(){
 }
 
 function viewSetup(){
-  const canStart = S.players.length >= 1 && S.sel.length === 5;
-  const canResume = S.cats.length === 5 && S.players.length > 0 && Object.keys(S.used).length > 0;
+  const canStart = S.players.length >= 1 && S.sel.length >= MIN_CATS && S.sel.length <= MAX_CATS;
+  const canResume = S.cats.length >= MIN_CATS && S.players.length > 0 && Object.keys(S.used).length > 0;
   return `
   <header class="hero">
     <a class="btn ghost small" href="index.html" style="float:left;display:inline-block">🏠 Home</a>
     <button class="btn ghost small" style="float:right" onclick="Net.openPanel()">📱 Telefoni${Net.onlineCount ? ' (' + Net.onlineCount + ')' : ''}</button>
     <h1>JEOPARDY NIGHT</h1>
-    <p>Aggiungi i giocatori, scegli 5 categorie su 20 e che vinca il più sgamato! 🏆</p>
+    <p>Aggiungi i giocatori, scegli da 3 a 6 categorie su ${CATEGORIES.length} e che vinca il più sgamato! 🏆</p>
   </header>
   <div class="setup">
     <section class="panel">
@@ -402,9 +409,9 @@ function viewSetup(){
     </section>
     <section class="panel">
       <div class="cat-head">
-        <h2>🗂️ Scegli 5 categorie</h2>
+        <h2>🗂️ Scegli da ${MIN_CATS} a ${MAX_CATS} categorie</h2>
         <div style="display:flex;gap:10px;align-items:center">
-          <span class="counter"><b>${S.sel.length}</b> / 5</span>
+          <span class="counter"><b>${S.sel.length}</b> / ${MAX_CATS}</span>
           <button class="btn ghost small" onclick="randomCats()">🎲 Casuali</button>
         </div>
       </div>
@@ -436,7 +443,7 @@ function viewGame(){
     </div>
   </div>
   <div class="turn">Tocca a <b>${picker ? picker.av+' '+esc(picker.name) : ''}</b>: scegli una casella!</div>
-  <div class="board">
+  <div class="board" style="--n:${S.cats.length}">
     ${S.cats.map(id => { const c = catById(id); return `
       <div class="head" style="--cc:${c.color}"><span class="em">${c.em}</span><span class="nm">${esc(c.name)}</span></div>`; }).join('')}
     ${POINTS.map((pt, r) => S.cats.map((id, ci) => {
@@ -498,7 +505,7 @@ function removePlayer(id){ S.players = S.players.filter(p => p.id !== id); rende
 function toggleCat(id){
   const i = S.sel.indexOf(id);
   if(i >= 0) S.sel.splice(i,1);
-  else if(S.sel.length < 5) S.sel.push(id);
+  else if(S.sel.length < MAX_CATS) S.sel.push(id);
   else { S.sel.shift(); S.sel.push(id); }
   render();
 }
@@ -510,7 +517,7 @@ function startGame(){
   S.cats = [...S.sel];
   S.players.forEach(p => p.score = 0);
   S.used = {}; S.picker = Math.floor(Math.random()*S.players.length);
-  S.dd = Math.floor(Math.random()*5) + '-' + (1 + Math.floor(Math.random()*4)); // raddoppio nascosto (non sulla riga da 100)
+  S.dd = Math.floor(Math.random()*S.cats.length) + '-' + (1 + Math.floor(Math.random()*4)); // raddoppio nascosto (non sulla riga da 100)
   S.phase = 'game';
   render();
 }
@@ -651,7 +658,7 @@ function confirmQ(){
   S.picker = anyOk ? lastWinner : (S.picker + 1) % S.players.length;
   if(anyOk){ burst(['🎉','✨','⭐','🔥'],28); }
   closeModal();
-  const all = Object.keys(S.used).length >= 25;
+  const all = Object.keys(S.used).length >= S.cats.length * 5;
   if(all){ S.phase = 'end'; render(); sfx.win(); burst(['🎉','🏆','⭐','🎊','🥳'],70); return; }
   render();
 }
@@ -760,7 +767,7 @@ if(S.phase === 'setup'){
     S.nid = S.players.length + 1;
   }
 }
-if(S.phase === 'game' && !(S.cats.length === 5 && S.players.length)) S = fresh();
+if(S.phase === 'game' && !(S.cats.length >= MIN_CATS && S.players.length)) S = fresh();
 render();
 Net.start({onAct, onChange:() => { adoptMembers(); render(); }});
 </script>
