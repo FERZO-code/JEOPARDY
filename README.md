@@ -1,6 +1,6 @@
 # Party Night 🎉
 
-Giochi da fare con gli amici: **Jeopardy Night**, **Chi Sei Davvero?** e **Affari Tuoi**
+Giochi da fare con gli amici: **Jeopardy Night**, **Chi Sei Davvero?**, **Affari Tuoi** e **Reazione a Catena**
 
 ## Online (Vercel)
 Il sito è statico + una funzione (`api/party.js`). Le stanze per giocare dai telefoni stanno in **Upstash Redis**
@@ -30,6 +30,7 @@ Apri `index.html` (o il sito) e gioca tutti insieme: il telefono è facoltativo.
 | `index.html` | Home con la scelta dei giochi e dei giocatori |
 | `jeopardy.html` | Jeopardy Night |
 | `chisei.html` | Chi Sei Davvero? (4 parti) |
+| `catena.html` | Reazione a Catena (2 squadre, 4 parti) |
 | `affari.html` | Affari Tuoi (Concorrente, Dottore, Pacchisti, Pubblico) |
 | `play.html` | Schermata che si apre sui telefoni |
 | `api/party.js` | Funzione Vercel con le API delle stanze (Upstash Redis) |

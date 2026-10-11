@@ -42,6 +42,26 @@
   .o.ghost{background:transparent}
   .o:disabled{opacity:.4;pointer-events:none}
   .pulse{animation:pulse 1.4s infinite}
+  main{padding-bottom:96px}
+  .reactbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;justify-content:center;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+            background:#0b1568f2;border-top:3px solid #ffffff22;backdrop-filter:blur(6px)}
+  .reactbar button{flex:1;max-width:60px;font-size:1.7rem;padding:6px 0;border-radius:14px;background:#ffffff14;transition:transform .08s}
+  .reactbar button:active{transform:scale(1.3)}
+  .chainv{display:grid;gap:4px;width:100%;justify-items:center}
+  .chainv .cw{font-family:var(--title);letter-spacing:.12em;font-size:1.25rem;padding:7px 14px;border-radius:12px;width:100%;max-width:340px;
+              background:#ffffff14;border:2px solid #ffffff33}
+  .chainv .cw.edge{background:linear-gradient(160deg,#ffd75e,#e0951a);color:#3a2300;border-color:#fff8}
+  .chainv .cw.sol0{background:linear-gradient(160deg,#ff4a64,#a30f26);border-color:#fff8}
+  .chainv .cw.sol1{background:linear-gradient(160deg,#4d93ff,#1245b8);border-color:#fff8}
+  .chainv .cl{opacity:.6;line-height:.9;font-size:.9rem}
+  .notes{display:grid;gap:6px;width:100%}
+  .note{background:#7b2cbf55;border:2px solid #c77dff;border-radius:14px;padding:8px 12px;font-weight:700}
+  .tapwrap{width:100%;display:grid;gap:10px}
+  .tapbtn{min-height:140px;border-radius:24px;background:linear-gradient(160deg,#ffd75e,#e0951a);color:#3a2300;font-family:var(--title);font-size:1.6rem;
+          border:4px solid #fff;box-shadow:0 8px 0 #8a5a00;transition:transform .05s;touch-action:manipulation}
+  .tapbtn:active{transform:translateY(5px);box-shadow:0 3px 0 #8a5a00}
+  .tapbar{height:16px;background:#ffffff22;border-radius:99px;overflow:hidden}
+  .tapbar i{display:block;height:100%;background:var(--ok);transition:width .08s}
   .anim-drum{animation:drum .3s infinite}
   .anim-ring{animation:ring .5s infinite}
   @keyframes drum{25%{transform:translate(-5px,3px) rotate(-3deg)}75%{transform:translate(5px,-3px) rotate(3deg)}}
@@ -70,6 +90,7 @@ let me = null;           // {pid, name}
 let spec = null;         // ultimo schermo ricevuto
 let picked = {};         // scelte locali evidenziate: sid -> [ids]
 let online = false, busy = false;
+let tapCount = 0, tapSent = false, lastReact = 0;
 
 function loadMe(){ try{ return JSON.parse(localStorage.getItem(MEKEY)); }catch(e){ return null; } }
 function saveMe(){ try{ localStorage.setItem(MEKEY, JSON.stringify(me)); }catch(e){} }
@@ -133,7 +154,7 @@ function connect(){
           }catch(e){ localStorage.removeItem(MEKEY); me = null; showJoin(); return; }
         }else if(j.screen){
           ver = j.ver;
-          if(!spec || spec.sid !== j.screen.sid) picked = {};
+          if(!spec || spec.sid !== j.screen.sid){ picked = {}; tapCount = 0; tapSent = false; }
           spec = j.screen; busy = false; render();
           if(navigator.vibrate && spec.buzz) navigator.vibrate(60);
         }
@@ -165,6 +186,10 @@ function render(){
     if(s.tags && s.tags.length) html += `<div class="tags">${s.tags.map(t => `<span>🚫 ${esc(t)}</span>`).join('')}</div>`;
     if(s.timer !== undefined && s.timer !== null) html += `<div class="timer ${s.timer <= 10 ? 'low' : ''}">⏱ ${s.timer}</div>`;
     if(s.text) html += `<p class="text">${esc(s.text)}</p>`;
+    if(s.chain && s.chain.length) html += `<div class="chainv">${s.chain.map((w, i) => `<div class="cw ${w.s === 'hid' ? '' : w.s}">${esc(w.t)}</div>${i < s.chain.length - 1 ? '<div class="cl">⛓️</div>' : ''}`).join('')}</div>`;
+    if(s.notes && s.notes.length) html += `<div class="notes">${s.notes.map(n => `<div class="note">${esc(n)}</div>`).join('')}</div>`;
+    if(s.tap) html += `<div class="tapwrap"><button class="tapbtn" id="tapbtn" onpointerdown="tapIt(event)">${esc(s.tap.label)}<br><small id="taplbl">${tapCount} / ${s.tap.goal}</small></button>
+      <div class="tapbar"><i id="tapfill" style="width:${Math.min(100, tapCount / s.tap.goal * 100)}%"></i></div></div>`;
     (s.groups || []).forEach((g, gi) => {
       html += `<div class="group">${g.title ? `<h4>${esc(g.title)}</h4>` : ''}<div class="opts ${g.layout === 'grid' ? 'grid' : ''}">
         ${g.options.map(o => `<button class="o ${o.tone || ''} ${sel.includes(o.id) ? 'sel' : ''}" ${o.disabled ? 'disabled' : ''}
@@ -178,6 +203,7 @@ function render(){
       <button class="btn small" type="submit">${esc(s.input.label || 'Invia')}</button></form>`;
   }
   html += '</main>';
+  if(s && s.react && s.react.length) html += `<div class="reactbar">${s.react.map(e => `<button onclick="react('${e}')">${e}</button>`).join('')}</div>`;
   const typed = $('#txt') ? $('#txt').value : '';
   $('#app').innerHTML = html;
   if(typed && $('#txt')) $('#txt').value = typed;
@@ -209,6 +235,28 @@ async function act(id){
   render();
   if(navigator.vibrate) navigator.vibrate(25);
   try{ await post('/api/act', {room, pid:me.pid, data:{sid:spec.sid, id}}); }catch(e){}
+}
+/* tocca ripetutamente per rompere il sigillo del pacco */
+async function tapIt(e){
+  if(e) e.preventDefault();
+  if(!spec || !spec.tap || tapSent) return;
+  tapCount++;
+  if(navigator.vibrate) navigator.vibrate(12);
+  const goal = spec.tap.goal;
+  const f = $('#tapfill'), l = $('#taplbl');
+  if(f) f.style.width = Math.min(100, tapCount / goal * 100) + '%';
+  if(l) l.textContent = Math.min(tapCount, goal) + ' / ' + goal;
+  if(tapCount >= goal){
+    tapSent = true;
+    if(navigator.vibrate) navigator.vibrate([40, 30, 80]);
+    try{ await post('/api/act', {room, pid:me.pid, data:{sid:spec.sid, id:spec.tap.id}}); }catch(err){ tapSent = false; }
+  }
+}
+/* reazioni live: arrivano sullo schermo grande */
+async function react(emoji){
+  const now = Date.now(); if(now - lastReact < 700) return; lastReact = now;
+  if(navigator.vibrate) navigator.vibrate(15);
+  try{ await post('/api/act', {room, pid:me.pid, data:{sid:spec ? spec.sid : '', id:'r:' + emoji}}); }catch(err){}
 }
 async function sendText(e){
   e.preventDefault();

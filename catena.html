@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reazione a Catena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{--t0:#e8203f;--t1:#1f6bff;--ok2:#2ee6a0}
+  body{background:radial-gradient(1100px 700px at 50% -10%, #0e5a63, #04161a 72%) fixed}
+  .wrap{max-width:1200px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .topbar h1{font-size:1.7rem;color:var(--gold)}
+  .topbar .acts{display:flex;gap:8px}
+
+  /* ---------- setup ---------- */
+  .setup{display:grid;gap:18px;margin-top:18px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  @media (max-width:860px){.setup{grid-template-columns:1fr}}
+  .teamcols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .teamcol{background:#ffffff0c;border-top:6px solid var(--c);border-radius:14px;padding:10px;min-height:90px}
+  .teamcol h3{font-size:1.2rem;margin-bottom:6px}
+  .prow{display:flex;align-items:center;gap:6px;background:#ffffff10;border-radius:10px;padding:5px 8px;margin-top:5px;font-weight:600}
+  .prow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .prow button{background:none;font-size:1rem;padding:2px 6px;border-radius:8px;color:var(--mute)}
+  .prow button:hover{color:var(--gold)}
+  .parts-list{list-style:none;padding:0;display:grid;gap:10px}
+  .parts-list li{display:flex;gap:12px;align-items:flex-start;background:#ffffff0f;border-radius:14px;padding:10px 12px}
+  .parts-list .e{font-size:1.9rem;line-height:1}
+  .parts-list b{display:block;font-family:var(--title);font-weight:400;letter-spacing:.04em;color:var(--gold);font-size:1.1rem}
+  .parts-list span{color:#d9defa;font-size:.95rem}
+  .modes{display:flex;gap:10px;margin-top:14px}
+  .seg{flex:1;background:#ffffff0f;border:2px solid #ffffff22;border-radius:14px;padding:10px;font-weight:700;display:flex;flex-direction:column;gap:2px}
+  .seg small{color:var(--mute);font-weight:500}
+  .seg.on{border-color:var(--gold);background:#ffcf3d22}
+  .start-bar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px 0 40px}
+
+  /* ---------- gioco ---------- */
+  .stepper{display:flex;gap:6px;margin-bottom:12px}
+  .stepper div{flex:1;text-align:center;padding:6px 4px;border-radius:12px;background:#ffffff12;font-weight:700;font-size:.85rem;color:var(--mute);display:flex;flex-direction:column;border:2px solid transparent}
+  .stepper b{font-size:1.1rem}
+  .stepper .done{color:var(--ok2)}
+  .stepper .now{background:linear-gradient(160deg,#12a3b4,#0b5d6b);color:#fff;border-color:var(--gold)}
+  @media (max-width:560px){.stepper div span{display:none}}
+  .teambar{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin-bottom:12px}
+  .tcard{background:#0007;border:3px solid transparent;border-top:8px solid var(--c);border-radius:16px;padding:8px 12px;display:flex;align-items:center;gap:10px;transition:transform .2s,border-color .2s}
+  .tcard.act{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 0 22px #ffcf3d55}
+  .tcard .n{font-family:var(--title);font-size:1.3rem;letter-spacing:.04em}
+  .tcard .m{font-size:.8rem;color:var(--mute);font-weight:600}
+  .tcard .s{margin-left:auto;font-family:var(--title);font-size:2.4rem;color:var(--gold);line-height:1}
+  .vs{align-self:center;font-family:var(--title);color:var(--mute)}
+  .stage{background:#00000055;border:3px solid #ffffff22;border-radius:22px;padding:clamp(14px,2.6vw,28px);display:flex;flex-direction:column;
+         align-items:center;gap:14px;text-align:center;min-height:300px;justify-content:center;animation:pop .25s}
+  .badge{font-family:var(--title);letter-spacing:.08em;color:#1a1200;background:var(--gold);padding:4px 16px;border-radius:99px;font-size:1rem}
+  .badge.x2{background:linear-gradient(90deg,#ff3d81,#ffb100);color:#fff;animation:pulse 1s infinite}
+  .lead{font-size:1.15rem;color:#d8efe9;font-weight:600}
+  .big{font-family:var(--title);font-size:clamp(1.7rem,5vw,3.2rem);line-height:1.15;text-shadow:0 3px 0 #0006;letter-spacing:.02em}
+  .huge{font-size:clamp(3.5rem,12vw,7rem);line-height:1}
+  .hint{color:var(--mute);font-size:.95rem}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .rules{list-style:none;padding:0;display:grid;gap:8px;max-width:640px;text-align:left}
+  .rules li{background:#ffffff12;border-radius:12px;padding:10px 14px;font-size:1.05rem;line-height:1.3}
+  .rules li::before{content:"▸ ";color:var(--gold);font-weight:700}
+  .btn.t0{background:var(--t0);color:#fff;box-shadow:0 4px 0 #8f1428}
+  .btn.t1{background:var(--t1);color:#fff;box-shadow:0 4px 0 #0f3f9c}
+
+  .chain{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;width:100%}
+  .w{font-family:var(--title);letter-spacing:.06em;font-size:clamp(1.1rem,2.6vw,1.9rem);padding:10px 14px;border-radius:14px;min-width:90px;
+     background:#ffffff14;border:3px solid #ffffff33;transition:background .3s,transform .3s}
+  .w small{display:block;font-family:var(--body);font-size:.75rem;font-weight:700;letter-spacing:0;opacity:.85}
+  .w.edge{background:linear-gradient(160deg,#ffd75e,#e0951a);color:#3a2300;border-color:#fff8}
+  .w.hid{letter-spacing:.2em;color:#cfe8e2}
+  .w.sol0{background:linear-gradient(160deg,#ff4a64,#a30f26);border-color:#fff8;animation:pop .35s}
+  .w.sol1{background:linear-gradient(160deg,#4d93ff,#1245b8);border-color:#fff8;animation:pop .35s}
+  .link{font-size:1.2rem;opacity:.7}
+  .cdwrap{width:100%;max-width:560px;display:grid;gap:4px}
+  .cdtext{font-family:var(--title);font-size:1.7rem;color:var(--gold)}
+  .cdbar{height:12px;background:#ffffff22;border-radius:99px;overflow:hidden}
+  .cdbar i{display:block;height:100%;background:linear-gradient(90deg,var(--ko),var(--gold));transition:width .25s linear}
+  .feed{display:grid;gap:4px;width:100%;max-width:520px}
+  .feed div{background:#ffffff10;border-radius:10px;padding:4px 10px;font-weight:600;text-align:left;font-size:.95rem}
+  .feed .ok{color:var(--ok2)}.feed .ko{color:#ff8da0;text-decoration:line-through}
+  .clues{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .clue{background:#ffffff18;border:3px solid var(--gold);border-radius:14px;padding:8px 16px;font-family:var(--title);font-size:1.5rem;letter-spacing:.05em;animation:pop .3s}
+  .hostin{width:100%;max-width:560px;background:#0004;border-radius:14px;padding:8px 12px;text-align:left}
+  .hostin summary{cursor:pointer;color:var(--mute);font-weight:600}
+  .hostin form{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .hostin input{flex:1;min-width:140px;background:#050a3a;border:2px solid #ffffff2a;border-radius:12px;color:var(--ink);padding:9px 12px;font:inherit}
+
+  .rank{width:100%;max-width:560px;display:grid;gap:8px}
+  .rank .row{display:flex;align-items:center;gap:12px;background:#ffffff12;border-left:8px solid var(--c);border-radius:14px;padding:10px 14px;font-weight:700;text-align:left}
+  .rank .row .t{font-family:var(--title);font-size:1.7rem;color:var(--gold);margin-left:auto}
+  .end h1{font-size:clamp(2.2rem,7vw,4.5rem);color:var(--gold);text-shadow:0 5px 0 #8a5d00}
+  .awards{display:grid;gap:8px;width:100%;max-width:640px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .award{background:#ffffff12;border-radius:14px;padding:10px 14px;text-align:left;display:flex;gap:10px;align-items:center}
+  .award .e{font-size:2rem}
+  .award b{display:block;color:var(--gold);font-family:var(--title);font-weight:400;letter-spacing:.04em}
+  .award span{font-size:.92rem;color:#d8efe9}
+  #fxlayer{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
+  .react{position:absolute;bottom:-70px;display:flex;flex-direction:column;align-items:center;font-size:3rem;animation:rise 3.4s ease-out forwards;filter:drop-shadow(0 4px 0 #0005)}
+  .react small{font-family:var(--body);font-size:.85rem;font-weight:700;background:#000b;border-radius:99px;padding:2px 10px;color:#fff;white-space:nowrap}
+  @keyframes rise{to{transform:translateY(-115vh) rotate(var(--r));opacity:.85}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script src="qrcode.js"></script>
+<script src="shared.js"></script>
+<script src="net.js"></script>
+<script>
+const { esc, shuffle, tone, burst } = Party;
+const $ = s => document.querySelector(s);
+const KEY = 'catena-v1';
+
+/* =====================================================================
+   CONTENUTI
+   Ogni coppia di parole consecutive forma un'espressione o una parola
+   composta (anche con "di", "a", "da" sottintesi): "capo+lavoro", "lavoro a maglia"…
+   ===================================================================== */
+const CHAINS = [
+  ['PESCE','SPADA','LASER','GAME','OVER','BOOKING'],
+  ['CARTELLINO','ROSSO','SANGUE','FREDDO','CANE','LUPO','MANNARO'],
+  ['MEZZA','LUNA','PIENA','ESTATE','INDIANA','JONES'],
+  ['CAPO','LAVORO','MAGLIA','ROSA','SHOCKING'],
+  ['SOTTO','TERRA','MADRE','NATURA','MORTA'],
+  ['TORRE','CONTROLLO','QUALITÀ','PREZZO','FISSO'],
+  ['PIANO','BAR','SPORT','ESTREMO','ORIENTE'],
+  ['PIATTO','GIORNO','LIBERO','SCAMBIO','CULTURALE'],
+  ['ULTIMA','ORA','PUNTA','DIAMANTE','GREZZO'],
+  ['FILO','FERRO','CAVALLO','BATTAGLIA','NAVALE'],
+  ['SCATOLA','MONTAGGIO','FINALE','PARTITA','DOPPIA'],
+  ['SPAZIO','TEMPO','PIENO','INVERNO','NUCLEARE'],
+  ['BUONA','NOTTE','BIANCA','NEVE','ARTIFICIALE']
+];
+const TARGETS = ['CASA','MARE','PIZZA','ESTATE','CINEMA','TRENO','AMICIZIA','VACANZA','COMPLEANNO','SCUOLA','GELATO','MUSICA',
+  'DOTTORE','NATALE','PALLONE','FORESTA','ORCHESTRA','BIBLIOTECA','ASTRONAUTA','VULCANO','SUPERMERCATO','FARMACIA','PIRATA',
+  'MATRIMONIO','MONTAGNA','CIOCCOLATO','CARNEVALE','ARCOBALENO','TELEFONO','BICICLETTA','OROLOGIO','ISOLA','DRAGO','CIRCO','SPIAGGIA'];
+
+const TEAMS = [{n:'Rossi', em:'🔴', c:'#e8203f'}, {n:'Blu', em:'🔵', c:'#1f6bff'}];
+const PARTS = [
+  {n:1, em:'⛓️', name:'La Catena', short:'Catena', mult:1, secs:90, rules:[
+    'Una catena di parole: la prima e l\'ultima sono svelate, in mezzo ci sono caselle nascoste.',
+    'Ogni parola forma un\'espressione con quella prima e con quella dopo (es. CAPO → LAVORO → MAGLIA).',
+    'Scrivete le parole dal telefono: ogni parola giusta vale 1 punto, catena completa +2. L\'indizio costa −1.']},
+  {n:2, em:'🤝', name:'L\'Intesa Vincente', short:'Intesa', mult:1, secs:45, rules:[
+    'Un compagno deve indovinare una parola segreta: solo gli altri la vedono sul telefono.',
+    'Chi dà gli indizi scrive UNA parola alla volta (mai la parola stessa!). Massimo 4 indizi.',
+    '3 punti se si indovina con 1 indizio, 2 con 2, 1 con 3 o 4. Se fallisce, la squadra avversaria può rubare!']},
+  {n:3, em:'🏁', name:'Corsa alla Catena', short:'Corsa', mult:1, secs:75, rules:[
+    'Stessa catena per entrambe le squadre, nello stesso momento!',
+    'Vince la parola chi la scrive per primo: i punti vanno alla squadra di chi risponde.',
+    'Occhio agli avversari: ogni parola rubata è un punto in meno per voi.']},
+  {n:4, em:'🔥', name:'L\'Ultima Parola', short:'Finale', mult:2, secs:60, rules:[
+    'La finale: una catena lunga a testa, 60 secondi, PUNTI DOPPI.',
+    'Parola giusta +2, catena completa +4. Parte la squadra che sta perdendo.',
+    'Ogni parola conta: la rimonta è sempre possibile!']}
+];
+const MAXCLUES = 4, ATTEMPTS = 3, STEAL_SECS = 15;
+const REACTIONS = ['👏','😱','🤡','🔥','💀','🙏'];
+
+/* =====================================================================
+   STATO
+   ===================================================================== */
+let G = load() || fresh();
+function fresh(){ return {phase:'setup', players:[], teams:[{score:0},{score:0}], mode:'fast', part:0, rounds:[], r:0, stage:'', c:null, errs:{}, muted:false}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(G)); }catch(e){} }
+const mkPlayer = (p,i) => ({id:i+1, name:p.name, av:p.av, color:p.color, pid:p.pid || null, team:typeof p.team === 'number' ? p.team : i % 2,
+                            st:{words:0, clues:0, hits:0, steals:0, reacts:0}});
+const byId = id => G.players.find(p => p.id === id);
+const linked = p => !!(p && p.pid && Net.online(p.pid));
+const R = () => G.rounds[G.r];
+const mult = () => PARTS[G.part - 1].mult;
+const members = t => G.players.filter(p => p.team === t);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+let T = null;
+const stopTimer = () => { clearInterval(T); T = null; };
+
+/* ---- confronto parole ---- */
+const squash = s => norm(String(s || '')).replace(/\s+/g, '');
+function lev(a, b){
+  const m = a.length, n = b.length, d = Array.from({length:m + 1}, (_, i) => [i, ...Array(n).fill(0)]);
+  for(let j = 1; j <= n; j++) d[0][j] = j;
+  for(let i = 1; i <= m; i++) for(let j = 1; j <= n; j++)
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[m][n];
+}
+const same = (g, w) => g === w || (w.length >= 6 && g.length >= 5 && lev(g, w) <= 1);   // tollera 1 errore di battitura
+
+/* =====================================================================
+   FLUSSO
+   ===================================================================== */
+function buildRounds(n){
+  const full = G.mode === 'full';
+  if(n === 1){
+    const ch = shuffle(CHAINS), k = full ? 2 : 1, out = [];
+    for(let i = 0; i < k; i++){ out.push({team:0, chain:ch[i * 2]}); out.push({team:1, chain:ch[i * 2 + 1]}); }
+    return out;
+  }
+  if(n === 2){
+    const k = full ? 3 : 2, w = shuffle(TARGETS), out = [], idx = [0, 0];
+    for(let i = 0; i < k; i++) for(const t of [0, 1]){
+      const m = members(t);
+      out.push({team:t, guesser:m[idx[t]++ % m.length].id, target:w.pop()});
+    }
+    return out;
+  }
+  if(n === 3) return shuffle(CHAINS).slice(0, full ? 2 : 1).map(chain => ({team:null, chain}));
+  const longest = [...CHAINS].sort((a,b) => b.length - a.length).slice(0, 4);
+  const pick = shuffle(longest), first = G.teams[0].score <= G.teams[1].score ? 0 : 1;
+  return [{team:first, chain:pick[0]}, {team:1 - first, chain:pick[1]}];
+}
+function prepare(){
+  const rd = R();
+  if(G.part === 2){
+    G.c = {target:rd.target, clues:[], attempts:ATTEMPTS, left:PARTS[1].secs, secs:PARTS[1].secs, feed:[], result:null, pts:0};
+  }else{
+    const ch = rd.chain, n = ch.length;
+    G.c = {words:ch, solved:ch.map((_,i) => i === 0 || i === n - 1), who:ch.map(() => null), hints:ch.map(() => 0),
+           left:PARTS[G.part - 1].secs, secs:PARTS[G.part - 1].secs, feed:[], pts:[0, 0], hintsUsed:0, done:false};
+  }
+}
+function startGame(){
+  stopTimer();
+  G.players.forEach(p => { p.st = {words:0, clues:0, hits:0, steals:0, reacts:0}; });
+  G.teams = [{score:0}, {score:0}]; G.errs = {};
+  startPart(1);
+}
+function startPart(n){
+  stopTimer();
+  G.phase = 'play'; G.part = n; G.rounds = buildRounds(n); G.r = 0; G.stage = 'intro'; G.c = null; G.errs = {};
+  render();
+}
+function begin(){ prepare(); G.stage = 'ready'; render(); }
+function nextRound(){
+  stopTimer(); G.r++; G.errs = {};
+  if(G.r >= G.rounds.length){ G.stage = 'recap'; G.c = null; render(); }
+  else{ prepare(); G.stage = 'ready'; render(); }
+}
+function nextPart(){
+  if(G.part < 4) startPart(G.part + 1);
+  else{ G.phase = 'final'; render(); tone([[523,.15],[659,.15],[784,.15],[1047,.15],[784,.15],[1047,.15],[1319,.5]]); burst(['🎉','🏆','⭐','🎊','🥳'], 70); }
+}
+function skipPart(){ if(confirm('Saltare il resto di questa parte?')){ stopTimer(); G.stage = 'recap'; G.c = null; render(); } }
+function giveTeam(t, n){ G.teams[t].score = Math.max(0, G.teams[t].score + n); }
+
+function goRun(){
+  if(G.stage !== 'ready') return;
+  G.stage = 'run'; G.c.left = G.c.secs;
+  tone([[523,.1],[659,.1],[784,.2]]);
+  startTimer(); render();
+}
+function startTimer(){
+  stopTimer();
+  let lastSec = -1;
+  T = setInterval(() => {
+    if(!G.c) return stopTimer();
+    G.c.left = Math.max(0, G.c.left - .25);
+    paintTimer();
+    const s = Math.ceil(G.c.left);
+    if(s !== lastSec){ lastSec = s; if(s <= 5 && s > 0) tone([[660,.05,'square']]); syncScreens(); }
+    if(G.c.left <= 0){ stopTimer(); timeUp(); }
+  }, 250);
+}
+function paintTimer(){
+  const b = document.querySelector('[data-bar]'), t = document.querySelector('[data-sec]');
+  if(!G.c) return;
+  if(b) b.style.width = clamp(G.c.left / G.c.secs * 100, 0, 100) + '%';
+  if(t) t.textContent = Math.ceil(G.c.left);
+}
+function timeUp(){
+  if(G.part === 2){
+    if(G.stage === 'run') toSteal();
+    else if(G.stage === 'steal') finishIntesa('nosteal');
+  }else if(G.stage === 'run') endRun();
+}
+
+/* ---- Parte 1, 3, 4: catena ---- */
+const hiddenIdx = () => G.c.words.map((_,i) => i).filter(i => !G.c.solved[i]);
+function answerChain(p, text){
+  if(G.stage !== 'run' || G.part === 2) return;
+  const rd = R();
+  if(G.part !== 3 && p.team !== rd.team) return;
+  const g = squash(text); if(!g) return;
+  const c = G.c;
+  const i = c.words.findIndex((w, k) => !c.solved[k] && same(g, squash(w)));
+  const log = (ok) => { c.feed.unshift({t:p.team, a:p.av, n:p.name, w:String(text).slice(0, 24), ok}); c.feed.length = Math.min(c.feed.length, 5); };
+  if(i < 0){ log(false); tone([[220,.12,'sawtooth']]); render(); return; }
+  c.solved[i] = true; c.who[i] = p.team; p.st.words++;
+  const m = mult();
+  c.pts[p.team] += m; giveTeam(p.team, m);
+  log(true); tone([[660,.08],[880,.12]]);
+  if(hiddenIdx().length === 0){
+    if(G.part !== 3){ c.pts[p.team] += 2 * m; giveTeam(p.team, 2 * m); }
+    c.done = true; endRun(); return;
+  }
+  render();
+}
+function useHint(p){
+  if(G.stage !== 'run' || G.part === 2 || G.part === 3) return;
+  const c = G.c, rd = R(); if(p.team !== rd.team || c.hintsUsed >= 3) return;
+  const h = hiddenIdx().filter(i => c.hints[i] + 1 < c.words[i].length - 1);
+  if(!h.length) return;
+  const i = shuffle(h)[0]; c.hints[i]++; c.hintsUsed++;
+  if(c.pts[p.team] > 0){ c.pts[p.team] -= 1; giveTeam(p.team, -1); }
+  tone([[392,.1],[330,.15]]); render();
+}
+function endRun(){
+  stopTimer(); if(G.stage !== 'run') return;
+  G.stage = 'sum'; render();
+  const tot = G.c.pts[0] + G.c.pts[1];
+  if(G.c.done){ tone([[523,.12],[659,.12],[784,.12],[1047,.4]]); burst(['⛓️','🎉','⭐'], 40); }
+  else tone([[392,.2],[330,.2],[262,.4]]);
+}
+
+/* ---- Parte 2: intesa vincente ---- */
+function toSteal(){
+  stopTimer(); const c = G.c;
+  G.stage = 'steal'; c.left = STEAL_SECS; c.secs = STEAL_SECS;
+  tone([[330,.15],[262,.3]]); startTimer(); render();
+}
+function finishIntesa(result){
+  stopTimer(); G.c.result = result; G.stage = 'sum'; render();
+  if(result === 'solved' || result === 'steal'){ tone([[523,.12],[659,.12],[784,.12],[1047,.4]]); burst(['🤝','🎉','⭐'], 36); }
+  else tone([[392,.2],[330,.2],[262,.4]]);
+}
+function sendClue(p, text){
+  if(G.part !== 2 || G.stage !== 'run') return;
+  const rd = R(), c = G.c;
+  if(p.team !== rd.team || p.id === rd.guesser || c.clues.length >= MAXCLUES) return;
+  const raw = String(text || '').trim(), s = squash(raw), t = squash(c.target);
+  if(!s) return;
+  if(/\s/.test(raw)){ G.errs[p.id] = 'Una sola parola per indizio!'; return render(); }
+  if(s.length >= 3 && (s.includes(t) || t.includes(s))){ G.errs[p.id] = 'Non puoi dire la parola (o quasi)!'; return render(); }
+  delete G.errs[p.id];
+  c.clues.push({t:raw.toUpperCase().slice(0, 20), by:p.id}); p.st.clues++;
+  tone([[880,.08],[1175,.12]]); render();
+}
+function sendGuess(p, text){
+  if(G.part !== 2 || G.stage !== 'run') return;
+  const rd = R(), c = G.c;
+  if(p.id !== rd.guesser || c.attempts <= 0) return;
+  const g = squash(text); if(!g) return;
+  c.attempts--;
+  c.feed.unshift({t:p.team, a:p.av, n:p.name, w:String(text).slice(0, 24), ok:same(g, squash(c.target))});
+  if(c.feed[0].ok){
+    const pts = Math.max(1, 4 - Math.max(1, c.clues.length));
+    c.pts = pts; giveTeam(rd.team, pts); p.st.hits++;
+    c.clues.forEach(cl => { const b = byId(cl.by); if(b) b.st.hits++; });
+    return finishIntesa('solved');
+  }
+  tone([[220,.12,'sawtooth']]);
+  if(c.attempts <= 0) return toSteal();
+  render();
+}
+function sendSteal(p, text){
+  if(G.part !== 2 || G.stage !== 'steal') return;
+  const rd = R(), c = G.c;
+  if(p.team === rd.team) return;
+  const g = squash(text); if(!g) return;
+  const ok = same(g, squash(c.target));
+  c.feed.unshift({t:p.team, a:p.av, n:p.name, w:String(text).slice(0, 24), ok}); c.feed.length = Math.min(c.feed.length, 5);
+  if(ok){ giveTeam(p.team, 1); c.pts = 1; c.stolenBy = p.team; p.st.steals++; return finishIntesa('steal'); }
+  tone([[220,.12,'sawtooth']]); render();
+}
+
+/* ---- ingresso risposte (telefono o host) ---- */
+function handleText(p, kind, text){
+  if(kind === 'ans') answerChain(p, text);
+  else if(kind === 'clue') sendClue(p, text);
+  else if(kind === 'guess') sendGuess(p, text);
+  else if(kind === 'steal') sendSteal(p, text);
+}
+function hostSubmit(e, team){
+  e.preventDefault();
+  const el = $('#hin'); const text = el.value.trim(); if(!text) return;
+  el.value = '';
+  const rd = R();
+  const sub = e.submitter && e.submitter.dataset.t;
+  const tm = sub !== undefined ? Number(sub) : (team !== undefined ? team : (rd && rd.team !== null ? rd.team : 0));
+  let pseudo = {id:0, name:'Host', av:'🎤', team:tm, st:{words:0, clues:0, hits:0, steals:0, reacts:0}};
+  if(G.part === 2){
+    if(G.stage === 'steal') return sendSteal(pseudo, text);
+    const g = byId(rd.guesser);
+    if(e.submitter && e.submitter.dataset.k === 'guess') return sendGuess(g, text);
+    pseudo.id = -1; pseudo.team = rd.team;
+    return sendClue(pseudo, text);
+  }
+  answerChain(pseudo, text);
+}
+function hostHint(){ const rd = R(); useHint({team:rd.team}); }
+
+/* =====================================================================
+   SETUP
+   ===================================================================== */
+function addPlayer(e){
+  e.preventDefault();
+  const inp = $('#pname'), name = inp.value.trim();
+  if(!name) return;
+  const t = members(0).length <= members(1).length ? 0 : 1;
+  G.players.push(mkPlayer({name, av:suggestEmoji(name, G.players.map(p => p.av)), color:COLORS[G.players.length % COLORS.length], team:t}, G.players.length));
+  inp.value = ''; render(); $('#pname').focus();
+}
+function previewAv(){ const v = $('#pname').value.trim(); $('#pprev').textContent = v ? suggestEmoji(v, G.players.map(p => p.av)) : '🙂'; }
+function removePlayer(id){ const keep = G.players.filter(p => p.id !== id); G.players = keep.map((p,i) => mkPlayer(p, i)); render(); }
+function swapTeam(id){ const p = byId(id); p.team = 1 - p.team; render(); }
+function shuffleTeams(){ shuffle(G.players).forEach((p, i) => { p.team = i % 2; }); render(); }
+function setMode(m){ G.mode = m; render(); }
+function toggleMute(){ G.muted = !G.muted; Party.muted = G.muted; render(); }
+function restart(){
+  if(!confirm('Tornare alla schermata iniziale? La partita in corso andrà persa.')) return;
+  stopTimer(); G.phase = 'setup'; G.part = 0; G.stage = ''; G.c = null; render();
+}
+function restart2(){ G.phase = 'setup'; G.part = 0; G.stage = ''; G.c = null; render(); }
+
+/* =====================================================================
+   VISTE
+   ===================================================================== */
+function render(){
+  const app = $('#app');
+  const typed = $('#pname') ? $('#pname').value : '';
+  const hin = $('#hin') ? $('#hin').value : '';
+  if(G.phase === 'setup'){ saveRoster(G.players); app.innerHTML = viewSetup(); if(typed){ $('#pname').value = typed; previewAv(); } }
+  else if(G.phase === 'final') app.innerHTML = viewFinal();
+  else{ app.innerHTML = viewPlay(); if(hin && $('#hin')) $('#hin').value = hin; paintTimer(); }
+  save();
+  syncScreens();
+}
+
+function viewSetup(){
+  const n = G.players.length, ok = members(0).length >= 2 && members(1).length >= 2;
+  return `
+  <header class="hero">
+    <a class="btn ghost small" href="index.html" style="float:left">🏠 Home</a>
+    <button class="btn ghost small" style="float:right" onclick="Net.openPanel()">📱 Telefoni${Net.onlineCount ? ' (' + Net.onlineCount + ')' : ''}</button>
+    <h1>REAZIONE A CATENA</h1>
+    <p>Due squadre, parole che si incatenano e un cronometro che non perdona ⛓️</p>
+  </header>
+  <div class="setup">
+    <section class="panel">
+      <h2>👥 Giocatori e squadre</h2>
+      <form class="add-row" onsubmit="addPlayer(event)">
+        <span class="prev" id="pprev">🙂</span>
+        <input id="pname" placeholder="Nome del giocatore" maxlength="16" autocomplete="off" oninput="previewAv()">
+        <button class="btn small" type="submit">Aggiungi</button>
+      </form>
+      <div class="teamcols">
+        ${[0,1].map(t => `<div class="teamcol" style="--c:${TEAMS[t].c}"><h3>${TEAMS[t].em} ${TEAMS[t].n}</h3>
+          ${members(t).map(p => `<div class="prow"><span>${p.av}</span><span class="nm">${esc(p.name)}</span>${linked(p) ? '<span title="Telefono">📱</span>' : ''}
+            <button title="Cambia squadra" onclick="swapTeam(${p.id})">⇄</button><button title="Rimuovi" onclick="removePlayer(${p.id})">✕</button></div>`).join('')}
+          </div>`).join('')}
+      </div>
+      <p class="hint">${ok ? 'Squadre pronte! Il gioco si fa dai telefoni: chi non ha il telefono può usare lo schermo principale.' : 'Servono almeno 2 giocatori per squadra.'}</p>
+      <div class="actions" style="margin-top:8px"><button class="btn ghost small" onclick="shuffleTeams()">🎲 Mescola le squadre</button></div>
+      <div class="modes">
+        <button class="seg ${G.mode === 'fast' ? 'on' : ''}" onclick="setMode('fast')">⚡ Veloce<small>~12 minuti</small></button>
+        <button class="seg ${G.mode === 'full' ? 'on' : ''}" onclick="setMode('full')">🔥 Completa<small>~25 minuti</small></button>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>🗺️ Le 4 parti</h2>
+      <ul class="parts-list">
+        ${PARTS.map(p => `<li><span class="e">${p.em}</span><div><b>PARTE ${p.n} · ${esc(p.name)}${p.mult > 1 ? ' (punti ×2)' : ''}</b><span>${esc(p.rules[0])}</span></div></li>`).join('')}
+      </ul>
+    </section>
+  </div>
+  <div class="start-bar"><button class="btn big" ${ok ? '' : 'disabled'} onclick="startGame()">⛓️ Si parte!</button></div>`;
+}
+
+function topbar(){
+  return `<div class="topbar"><h1>REAZIONE A CATENA</h1>
+    <div class="acts">
+      <a class="btn ghost small" href="index.html">🏠</a>
+      <button class="btn ghost small" onclick="Net.openPanel()">📱 ${Net.onlineCount || ''}</button>
+      <button class="btn ghost small" onclick="toggleMute()">${G.muted ? '🔇' : '🔊'}</button>
+      <button class="btn ghost small" onclick="skipPart()">⏭ Salta parte</button>
+      <button class="btn ghost small" onclick="restart()">↺</button>
+    </div></div>`;
+}
+function stepper(){
+  return `<div class="stepper">${PARTS.map(p => `<div class="${p.n < G.part ? 'done' : p.n === G.part ? 'now' : ''}"><b>${p.n < G.part ? '✓' : p.em}</b><span>${esc(p.short)}</span></div>`).join('')}</div>`;
+}
+function teambar(){
+  const rd = G.rounds[G.r], act = G.stage && rd && rd.team !== null && ['ready','run','steal','sum'].includes(G.stage) ? (G.stage === 'steal' ? 1 - rd.team : rd.team) : -1;
+  const card = t => `<div class="tcard ${act === t ? 'act' : ''}" style="--c:${TEAMS[t].c}"><span style="font-size:1.6rem">${TEAMS[t].em}</span>
+    <div><div class="n">${TEAMS[t].n}</div><div class="m">${members(t).map(p => p.av).join(' ')}</div></div><div class="s">${G.teams[t].score}</div></div>`;
+  return `<div class="teambar">${card(0)}<div class="vs">VS</div>${card(1)}</div>`;
+}
+
+function maskWord(w, shown){
+  return [...w].map((ch, i) => i < shown ? ch : '_').join(' ');
+}
+function chainData(){
+  const c = G.c, last = c.words.length - 1;
+  return c.words.map((w, i) => {
+    if(c.solved[i]) return {t:w, s:i === 0 || i === last ? 'edge' : 'sol' + c.who[i]};
+    return {t:maskWord(w, 1 + c.hints[i]), s:'hid', n:w.length};
+  });
+}
+function chainHTML(){
+  const items = chainData();
+  return `<div class="chain">${items.map((it, i) => `<div class="w ${it.s === 'hid' ? 'hid' : it.s}">${esc(it.t)}${it.n ? `<small>${it.n} lettere</small>` : ''}</div>${i < items.length - 1 ? '<span class="link">⛓️</span>' : ''}`).join('')}</div>`;
+}
+function feedHTML(){
+  const f = G.c.feed || [];
+  return f.length ? `<div class="feed">${f.map(x => `<div class="${x.ok ? 'ok' : 'ko'}" style="border-left:6px solid ${TEAMS[x.t].c}">${x.a} ${esc(x.n)}: ${esc(x.w)} ${x.ok ? '✅' : '❌'}</div>`).join('')}</div>` : '';
+}
+function timerHTML(){
+  const c = G.c;
+  return `<div class="cdwrap"><div class="cdtext">⏱ <b data-sec>${Math.ceil(c.left)}</b>s</div><div class="cdbar"><i data-bar style="width:${clamp(c.left / c.secs * 100, 0, 100)}%"></i></div></div>`;
+}
+function hostInputHTML(opts){
+  // per chi non ha il telefono: si scrive dallo schermo principale
+  return `<details class="hostin"><summary>⌨️ Senza telefono? Scrivi da qui</summary>
+    <form onsubmit="hostSubmit(event${opts && opts.team !== undefined ? ',' + opts.team : ''})">
+      <input id="hin" placeholder="${esc(opts && opts.ph || 'Scrivi una parola…')}" autocomplete="off">
+      ${(opts && opts.buttons) || '<button class="btn small" type="submit">Invia</button>'}
+    </form></details>`;
+}
+
+function stageHTML(){
+  const P = PARTS[G.part - 1], rd = R(), c = G.c;
+  const team = rd && rd.team !== null ? TEAMS[rd.team] : null;
+
+  if(G.stage === 'intro') return `
+    <span class="badge ${P.mult > 1 ? 'x2' : ''}">PARTE ${P.n} DI 4${P.mult > 1 ? ' · PUNTI DOPPI' : ''}</span>
+    <div class="huge">${P.em}</div><div class="big">${esc(P.name)}</div>
+    <ul class="rules">${P.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+    <button class="btn big" onclick="begin()">Si parte ▶</button>`;
+
+  if(G.stage === 'recap'){
+    const t0 = G.teams[0].score, t1 = G.teams[1].score;
+    return `
+    <span class="badge">FINE PARTE ${P.n}</span>
+    <div class="big">${t0 === t1 ? 'Parità perfetta!' : (t0 > t1 ? TEAMS[0].em + ' ' + TEAMS[0].n : TEAMS[1].em + ' ' + TEAMS[1].n) + ' in testa!'}</div>
+    <div class="rank">${[0,1].sort((a,b) => G.teams[b].score - G.teams[a].score).map(t => `
+      <div class="row" style="--c:${TEAMS[t].c}"><span>${TEAMS[t].em}</span><span>${TEAMS[t].n}</span><span class="t">${G.teams[t].score}</span></div>`).join('')}</div>
+    <button class="btn big" onclick="nextPart()">${G.part < 4 ? 'Parte ' + (G.part + 1) + ': ' + esc(PARTS[G.part].name) + ' ▶' : '🏆 Al verdetto finale!'}</button>`;
+  }
+
+  /* ----- Parte 2 ----- */
+  if(G.part === 2){
+    const g = byId(rd.guesser);
+    const cluesHTML = `<div class="clues">${c.clues.length ? c.clues.map(x => `<div class="clue">${esc(x.t)}</div>`).join('') : '<span class="hint">Nessun indizio per ora…</span>'}</div>`;
+    if(G.stage === 'ready') return `
+      <div class="lead">${team.em} Tocca alla squadra ${team.n}</div>
+      <div class="big">${g.av} ${esc(g.name)} deve indovinare!</div>
+      <p class="hint">Gli altri della squadra vedono la parola sul telefono e danno un indizio alla volta. ${esc(g.name)}, non guardare!</p>
+      <button class="btn big" onclick="goRun()">▶ Via!</button>
+      <details class="hostin"><summary>👀 Mostra la parola (solo per chi dà gli indizi, se non ha il telefono)</summary><div class="big" style="margin-top:8px">${esc(c.target)}</div></details>`;
+    if(G.stage === 'run') return `
+      <div class="lead">${g.av} ${esc(g.name)} indovina · ${team.em} ${team.n}</div>
+      ${timerHTML()}
+      <div class="big">Indizi (${c.clues.length}/${MAXCLUES})</div>
+      ${cluesHTML}
+      <div class="lead">Tentativi rimasti: ${'🟡'.repeat(c.attempts)}${'⚫'.repeat(ATTEMPTS - c.attempts)}</div>
+      ${feedHTML()}
+      ${hostInputHTML({team:rd.team, ph:'Indizio (o tentativo)…', buttons:'<button class="btn small" type="submit" data-k="clue">💡 Indizio</button><button class="btn small ghost" type="submit" data-k="guess">🎯 Tentativo</button>'})}`;
+    if(G.stage === 'steal') return `
+      <div class="lead">⚡ RUBA! Tocca a ${TEAMS[1 - rd.team].em} ${TEAMS[1 - rd.team].n}</div>
+      ${timerHTML()}
+      <div class="big">Qual era la parola?</div>
+      ${cluesHTML}
+      ${feedHTML()}
+      ${hostInputHTML({team:1 - rd.team, ph:'Parola da rubare…'})}`;
+    if(G.stage === 'sum'){
+      const r = c.result;
+      const head = r === 'solved' ? `✅ Indovinata! +${c.pts} per ${team.n}` : r === 'steal' ? `🦹 Rubata da ${TEAMS[c.stolenBy].n}! +1` : '😶 Nessuno l\'ha trovata';
+      return `
+      <div class="huge">${r === 'solved' ? '🤝' : r === 'steal' ? '🦹' : '🙈'}</div>
+      <div class="big">${head}</div>
+      <div class="lead">La parola era <b>${esc(c.target)}</b></div>
+      ${cluesHTML}
+      <button class="btn big" onclick="nextRound()">Avanti ▶</button>`;
+    }
+  }
+
+  /* ----- Parti 1, 3, 4 ----- */
+  if(G.stage === 'ready') return `
+    <div class="lead">${G.part === 3 ? 'Entrambe le squadre!' : team.em + ' Tocca alla squadra ' + team.n}</div>
+    <div class="big">${G.part === 3 ? 'Corsa alla catena!' : 'Pronti con la catena?'}</div>
+    ${chainHTML()}
+    <p class="hint">${G.part === 3 ? 'Tutti scrivono dal telefono: la parola va a chi arriva prima!' : 'Scrivete le parole dai telefoni, parlando tra voi. Hai ' + c.secs + ' secondi.'}</p>
+    <button class="btn big" onclick="goRun()">▶ Via!</button>`;
+  if(G.stage === 'run') return `
+    ${timerHTML()}
+    ${chainHTML()}
+    ${feedHTML()}
+    ${G.part !== 3 ? `<div class="actions"><button class="btn ghost small" onclick="hostHint()">💡 Indizio (−1) · ${3 - c.hintsUsed} rimasti</button></div>` : ''}
+    ${G.part === 3
+      ? hostInputHTML({ph:'Parola…', buttons:'<button class="btn small t0" type="submit" data-t="0">🔴 Rossi</button><button class="btn small t1" type="submit" data-t="1">🔵 Blu</button>'})
+      : hostInputHTML({team:rd.team})}`;
+  if(G.stage === 'sum'){
+    const got = G.part === 3 ? c.pts : [c.pts[rd.team]];
+    const head = G.part === 3
+      ? `${TEAMS[0].em} ${c.pts[0]} – ${c.pts[1]} ${TEAMS[1].em}`
+      : c.done ? `🎉 Catena completa! +${c.pts[rd.team]} per ${team.n}` : `⏰ Tempo! ${c.pts[rd.team]} punti per ${team.n}`;
+    return `
+    <div class="huge">${c.done ? '⛓️' : '⏰'}</div>
+    <div class="big">${head}</div>
+    <div class="lead">Ecco la catena completa:</div>
+    <div class="chain">${c.words.map((w, i) => `<div class="w ${c.solved[i] ? (i === 0 || i === c.words.length - 1 ? 'edge' : 'sol' + c.who[i]) : 'hid'}">${esc(w)}</div>${i < c.words.length - 1 ? '<span class="link">⛓️</span>' : ''}`).join('')}</div>
+    <button class="btn big" onclick="nextRound()">Avanti ▶</button>`;
+  }
+  return '';
+}
+
+function viewPlay(){
+  return `${topbar()}${stepper()}${teambar()}<main class="stage">${stageHTML()}</main>`;
+}
+
+function viewFinal(){
+  const t0 = G.teams[0].score, t1 = G.teams[1].score, tie = t0 === t1;
+  const w = t0 > t1 ? 0 : 1;
+  const top = fn => { const s = [...G.players].sort((a,b) => fn(b) - fn(a)); return fn(s[0]) > 0 ? s[0] : null; };
+  const awards = [
+    [top(p => p.st.words), '⛓️', 'Il Maestro della Catena', p => `${p.st.words} parole trovate`],
+    [top(p => p.st.clues), '💡', 'Il Re degli Indizi', p => `${p.st.clues} indizi dati`],
+    [top(p => p.st.hits), '🎯', 'Il Telepate', p => `${p.st.hits} intese vincenti`],
+    [top(p => p.st.steals), '🦹', 'Il Ladro di Parole', p => `${p.st.steals} parole rubate`],
+    [top(p => p.st.reacts), '🎉', 'L\'Anima della Festa', p => `${p.st.reacts} reazioni!`]
+  ].filter(a => a[0]);
+  return `${topbar()}
+  <main class="stage end">
+    <h1>${tie ? 'PAREGGIO EPICO!' : TEAMS[w].em + ' ' + TEAMS[w].n.toUpperCase() + ' VINCONO!'}</h1>
+    <div class="rank">${[0,1].sort((a,b) => G.teams[b].score - G.teams[a].score).map(t => `
+      <div class="row" style="--c:${TEAMS[t].c}"><span>${TEAMS[t].em}</span><span>${TEAMS[t].n} · ${members(t).map(p => p.av + ' ' + esc(p.name)).join(', ')}</span><span class="t">${G.teams[t].score}</span></div>`).join('')}</div>
+    <div class="awards">${awards.map(([p,e,t,f]) => `<div class="award"><span class="e">${e}</span><div><b>${t}</b><span>${p.av} ${esc(p.name)} · ${f(p)}</span></div></div>`).join('')}</div>
+    <div class="actions">
+      <button class="btn big" onclick="startGame()">🔁 Rivincita</button>
+      <button class="btn ghost" onclick="restart2()">Cambia squadre</button>
+      <a class="btn ghost" href="index.html">🏠 Home</a>
+    </div>
+  </main>`;
+}
+
+/* =====================================================================
+   TELEFONI
+   ===================================================================== */
+const LAST = {};
+const hash = str => { let h = 5381; for(let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+const playerByPid = pid => G.players.find(p => p.pid === pid);
+const opt = (id, label, extra = {}) => ({id, label, ...extra});
+const waitScreen = (emoji, title, text, extra = {}) => ({emoji, title, text, wait:true, groups:[], ...extra});
+
+function adoptMembers(){
+  let changed = false;
+  Net.members.filter(m => m.online).forEach(m => {
+    if(playerByPid(m.pid)) return;
+    const nn = norm(m.name);
+    let p = G.players.find(x => !linked(x) && norm(x.name) === nn);
+    if(!p && G.phase === 'setup'){
+      const t = members(0).length <= members(1).length ? 0 : 1;
+      p = mkPlayer({name:m.name, av:suggestEmoji(m.name, G.players.map(x => x.av)), color:COLORS[G.players.length % COLORS.length], team:t}, G.players.length);
+      G.players.push(p);
+    }
+    if(p){ p.pid = m.pid; changed = true; }
+  });
+  return changed;
+}
+function unlinkedScreen(){
+  const free = G.players.filter(p => !linked(p));
+  if(G.phase !== 'setup' && free.length) return {
+    emoji:'🙋', title:'Chi sei?', text:'Scegli il tuo nome tra i giocatori.',
+    groups:[{layout:'list', options:free.map(p => opt('claim:' + p.id, p.name, {emoji:p.av}))}]};
+  return waitScreen('👀', 'Spettatore', 'La partita è in corso: guarda lo schermo!');
+}
+
+function chainForPhone(){ return chainData().map(it => ({t:it.t, s:it.s})); }
+
+function screenFor(p){
+  const T_ = TEAMS[p.team];
+  if(G.phase === 'setup') return waitScreen(T_.em, `Sei nella squadra ${T_.n}!`, 'Aspetta che si parta.');
+  if(G.phase === 'final'){
+    const w = G.teams[0].score === G.teams[1].score ? -1 : G.teams[0].score > G.teams[1].score ? 0 : 1;
+    return waitScreen(w === p.team ? '🏆' : '🎉', w === -1 ? 'Pareggio epico!' : w === p.team ? 'Avete vinto!' : 'Sfida persa!', `${G.teams[0].score} – ${G.teams[1].score}`);
+  }
+  const P = PARTS[G.part - 1], rd = R(), c = G.c, st = G.stage;
+  const mine = rd && rd.team === p.team;
+  const opp = TEAMS[1 - p.team];
+  if(st === 'intro') return waitScreen(P.em, `Parte ${P.n}`, P.name);
+  if(st === 'recap') return waitScreen('📊', `Fine parte ${P.n}`, `${TEAMS[0].em} ${G.teams[0].score} – ${G.teams[1].score} ${TEAMS[1].em}`);
+
+  if(G.part === 2){
+    const g = byId(rd.guesser), isG = g.id === p.id;
+    const clueNotes = c.clues.map((x, i) => `💡 ${i + 1}. ${x.t}`);
+    if(st === 'ready') return mine
+      ? {emoji:isG ? '🙈' : '🤝', title:isG ? 'Tocca a te indovinare!' : `${g.name} deve indovinare`, text:isG ? 'Non guardare gli schermi dei compagni. Premi quando siete pronti.' : 'Vedrai la parola e darai indizi. Pronti?',
+         groups:[{options:[opt('go', '▶ Via!', {tone:'ok'})]}]}
+      : waitScreen('👀', `Tocca ai ${TEAMS[rd.team].n}`, 'Preparati a rubare se sbagliano!');
+    if(st === 'run'){
+      const left = Math.ceil(c.left);
+      if(isG) return {emoji:'🎯', title:'Indovina la parola!', text:`Tentativi rimasti: ${c.attempts}`, notes:clueNotes.length ? clueNotes : ['Aspetta gli indizi dei compagni…'],
+        input:{id:'guess', placeholder:'La tua risposta…', max:30, label:'Rispondi'}};
+      if(mine) return {emoji:'🤫', title:'La parola segreta', big:c.target, text:`Indizi ${c.clues.length}/${MAXCLUES}: scrivi UNA parola alla volta${G.errs[p.id] ? ' · ⚠️ ' + G.errs[p.id] : ''}`,
+        notes:clueNotes, input:{id:'clue', placeholder:'Un indizio (una parola)', max:20, label:'Invia indizio'}};
+      return {emoji:'🕵️', title:`${TEAMS[rd.team].n} stanno indovinando…`, text:'Preparati: se falliscono tocca a voi rubare!', notes:clueNotes, wait:true, groups:[]};
+    }
+    if(st === 'steal'){
+      if(!mine) return {emoji:'🦹', title:'RUBA LA PAROLA!', text:'Hai pochi secondi: qual era?', notes:clueNotes,
+        input:{id:'steal', placeholder:'La parola…', max:30, label:'Ruba!'}};
+      return waitScreen('😬', 'Ora tocca agli avversari…', 'Sperate che non la trovino!', {notes:clueNotes});
+    }
+    const r = c.result;
+    return waitScreen(r === 'solved' ? (mine ? '🎉' : '😤') : r === 'steal' ? (c.stolenBy === p.team ? '🦹' : '😱') : '🙈',
+      r === 'solved' ? `Indovinata: ${c.target}` : r === 'steal' ? `Rubata: ${c.target}` : `Era: ${c.target}`, '');
+  }
+
+  // parti 1, 3, 4
+  const can = G.part === 3 || mine;
+  if(st === 'ready') return can
+    ? {emoji:'⛓️', title:G.part === 3 ? 'Corsa alla catena!' : 'Tocca a voi!', text:'Scrivete le parole nascoste. Parlate con la squadra!', chain:chainForPhone(),
+       groups:[{options:[opt('go', '▶ Via!', {tone:'ok'})]}]}
+    : waitScreen('👀', `Tocca ai ${TEAMS[rd.team].n}`, 'Guarda lo schermo e tifa!', {chain:chainForPhone()});
+  if(st === 'run'){
+    const left = Math.ceil(c.left);
+    if(can) return {emoji:'⛓️', title:G.part === 3 ? 'Più veloci degli altri!' : 'Trova le parole nascoste', chain:chainForPhone(),
+      text:`Il vostro punteggio qui: ${G.part === 3 ? c.pts[p.team] : c.pts[rd.team]}`,
+      input:{id:'ans', placeholder:'Scrivi una parola…', max:24, label:'Invia'},
+      groups:G.part !== 3 && c.hintsUsed < 3 ? [{options:[opt('hint', `Indizio (−1) · ${3 - c.hintsUsed} rimasti`, {emoji:'💡', tone:'ghost'})]}] : []};
+    return {emoji:'👀', title:`${TEAMS[rd.team].n} sono in gara`, text:'Tifa o disturba con le reazioni!', chain:chainForPhone(), wait:true, groups:[]};
+  }
+  const pts = G.part === 3 ? c.pts[p.team] : (mine ? c.pts[rd.team] : 0);
+  return waitScreen(c.done ? '🎉' : '⏰', c.done ? 'Catena completa!' : 'Tempo scaduto!', G.part === 3 ? `${c.pts[0]} – ${c.pts[1]}` : (mine ? `Avete fatto ${pts} punti` : ''));
+}
+
+function syncScreens(){
+  if(Net.status !== 'online') return;
+  const screens = {};
+  Net.members.forEach(mem => {
+    const p = playerByPid(mem.pid);
+    let s;
+    try{ s = p ? {...screenFor(p), me:{av:p.av, name:p.name, color:TEAMS[p.team].c, score:G.teams[p.team].score}} : unlinkedScreen(); }
+    catch(e){ console.error(e); s = waitScreen('⏳', 'Un attimo…', ''); }
+    if(G.phase === 'play'){ s.react = REACTIONS; if(G.c && G.stage === 'run' || G.stage === 'steal') s.timer = G.c ? Math.ceil(G.c.left) : null; }
+    const {timer, ...core} = s;
+    s.sid = hash(JSON.stringify(core));
+    LAST[mem.pid] = s; screens[mem.pid] = s;
+  });
+  Net.push(screens, G.players.map(p => p.name));
+}
+
+const lastReact = {};
+function doReaction(p, emoji){
+  if(!REACTIONS.includes(emoji)) return;
+  const now = Date.now(); if(now - (lastReact[p.id] || 0) < 600) return; lastReact[p.id] = now;
+  p.st.reacts++;
+  const layer = $('#fxlayer');
+  if(layer && layer.childElementCount < 14){
+    const el = document.createElement('div');
+    el.className = 'react'; el.style.left = (5 + Math.random() * 85) + 'vw';
+    el.style.setProperty('--r', (Math.random() * 40 - 20) + 'deg');
+    el.innerHTML = `${emoji}<small>${esc(p.av)} ${esc(p.name)}</small>`;
+    layer.appendChild(el); setTimeout(() => el.remove(), 3500);
+  }
+  tone(emoji === '🤡' ? [[392,.15,'sawtooth'],[262,.4,'sawtooth']] : emoji === '💀' ? [[110,.3,'sawtooth']] : [[659,.1],[880,.15]]);
+}
+
+function onAct(pid, d){
+  const id = String(d.id), p = playerByPid(pid);
+  if(!p){
+    if(id.startsWith('claim:')){ const t = byId(Number(id.slice(6))); if(t && !linked(t)){ t.pid = pid; render(); } }
+    return;
+  }
+  if(G.phase !== 'play') return;
+  if(id.startsWith('r:')) return doReaction(p, id.slice(2));
+  // risposte scritte e indizi: valgono anche se lo schermo è cambiato nel frattempo
+  if(['ans','clue','guess','steal'].includes(id)) return handleText(p, id, String(d.text || '').slice(0, 40));
+  if(id === 'hint') return useHint(p);
+  if(!LAST[pid] || d.sid !== LAST[pid].sid) return;
+  if(id === 'go' && G.stage === 'ready'){
+    const rd = R();
+    if(G.part === 3 || rd.team === p.team) goRun();
+  }
+}
+
+/* ---------- avvio ---------- */
+Party.muted = G.muted;
+if(G.phase === 'setup'){
+  const r = loadRoster();
+  if(r){
+    const old = G.players;
+    G.players = r.map((x, i) => {
+      const o = old.find(q => norm(q.name) === norm(x.name)) || {};
+      return mkPlayer({...x, pid:o.pid, team:typeof o.team === 'number' ? o.team : i % 2}, i);
+    });
+  }
+}
+if(G.phase === 'play' && G.stage && ['run','steal'].includes(G.stage)){
+  G.stage = G.part === 2 && G.stage === 'steal' ? 'sum' : 'sum';     // il timer non sopravvive a un ricaricamento
+  if(G.c){ if(G.part === 2){ G.c.result = G.c.result || 'nosteal'; } else G.c.done = false; }
+}
+if(G.phase === 'play' && (!G.players.length || !G.rounds.length)) G = fresh();
+render();
+const fxl = document.createElement('div'); fxl.id = 'fxlayer'; document.body.appendChild(fxl);
+Net.start({onAct, onChange:() => { adoptMembers(); render(); }});
+</script>
+</body>
+</html>

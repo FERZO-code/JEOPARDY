@@ -34,7 +34,7 @@
   .tv{display:grid;gap:12px;grid-template-columns:96px minmax(0,1fr) 96px;align-items:start}
   @media (max-width:900px){.tv{grid-template-columns:1fr}.ladder{flex-direction:row !important;flex-wrap:wrap;justify-content:center}.ladder .v{min-width:56px}}
   .ladder{display:flex;flex-direction:column;gap:6px}
-  .ladder .v{font-family:var(--title);font-size:1.25rem;text-align:center;padding:6px 4px;border-radius:10px;color:#fff;
+  .ladder .v{font-family:var(--title);font-size:1.05rem;white-space:nowrap;text-align:center;padding:6px 4px;border-radius:10px;color:#fff;
              box-shadow:0 3px 0 #0006;transition:opacity .3s}
   .ladder .v.blue{background:linear-gradient(180deg,#3d86ff,var(--blue))}
   .ladder .v.red{background:linear-gradient(180deg,#ff4a64,var(--red))}
@@ -120,6 +120,15 @@
   .award .e{font-size:2rem}
   .award b{display:block;color:var(--gold);font-family:var(--title);font-weight:400;letter-spacing:.04em}
   .award span{font-size:.92rem;color:#e9d9dd}
+  #fxlayer{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
+  .react{position:absolute;bottom:-70px;display:flex;flex-direction:column;align-items:center;font-size:3.2rem;animation:rise 3.4s ease-out forwards;filter:drop-shadow(0 4px 0 #0005)}
+  .react small{font-family:var(--body);font-size:.85rem;font-weight:700;background:#000b;border-radius:99px;padding:2px 10px;color:#fff;white-space:nowrap}
+  @keyframes rise{to{transform:translateY(-115vh) rotate(var(--r));opacity:.85}}
+  .cdwrap{width:100%;max-width:520px;display:grid;gap:4px}
+  .cdtext{font-family:var(--title);font-size:1.6rem;color:var(--gold)}
+  .cdbar{height:10px;background:#ffffff22;border-radius:99px;overflow:hidden}
+  .cdbar i{display:block;height:100%;background:linear-gradient(90deg,var(--ko),var(--gold));transition:width 1s linear}
+  .whisper{color:#d9c6ff;font-weight:600}
   details.ctl{width:100%;background:#0004;border-radius:14px;padding:8px 12px;text-align:left}
   details.ctl summary{cursor:pointer;color:var(--mute);font-weight:600}
 </style>
@@ -138,21 +147,26 @@ const KEY = 'affari-v1';
 /* =====================================================================
    CONTENUTI
    ===================================================================== */
-const VALUES = [0,1,2,3,5,7,10,15,20,25,30,40,50,75,100,200];
-const isRed = v => v >= 20;                       // rosso = premio grosso, blu = premio piccolo
+const VALUES = [0,1,5,10,50,100,200,500, 5000,10000,15000,20000,30000,50000,100000,300000];   // euro
+const RED_FROM = 5000;
+const isRed = v => v >= RED_FROM;                 // rosso = premio grosso, blu = premio piccolo
+const fmt = n => Number(n).toLocaleString('it-IT') + ' €';
+const fmtShort = n => n >= 1000 ? (n / 1000).toLocaleString('it-IT') + 'k' : String(n);
+const fmtN = n => Number(n).toLocaleString('it-IT');
 const PRIZES = [
-  [0,'Lavi i piatti per tutti 🧽'],[1,'Offri una caramella a tutti 🍬'],[2,'Fai un complimento a ciascuno 💬'],
-  [3,'Imiti un animale per 10 secondi 🐒'],[5,'Racconti la tua figuraccia più grande 🙈'],[7,'Paghi il giro 🍻'],
-  [10,'Canti il ritornello di una canzone 🎤'],[15,'Scegli la musica per mezz\'ora 🎵'],
-  [20,'Scegli il film 🎬'],[25,'Un amico ti serve da bere 🍹'],[30,'Esentato dai piatti 🧼'],
-  [40,'Esentato dalla spesa 🛒'],[50,'Massaggio di 2 minuti 💆'],[75,'Assegni un pegno a chi vuoi 😈'],
-  [100,'Re della serata: tutti ti obbediscono 👑'],[200,'JACKPOT! Servito e riverito per una settimana 🏆']
+  [0,'Lavi i piatti per tutti 🧽'],[1,'Offri una caramella a tutti 🍬'],[5,'Fai un complimento a ciascuno 💬'],
+  [10,'Imiti un animale per 10 secondi 🐒'],[50,'Racconti la tua figuraccia più grande 🙈'],[100,'Paghi il giro 🍻'],
+  [200,'Canti il ritornello di una canzone 🎤'],[500,'Scegli la musica per mezz\'ora 🎵'],
+  [5000,'Scegli il film 🎬'],[10000,'Un amico ti serve da bere 🍹'],[15000,'Esentato dai piatti 🧼'],
+  [20000,'Esentato dalla spesa 🛒'],[30000,'Massaggio di 2 minuti 💆'],[50000,'Assegni un pegno a chi vuoi 😈'],
+  [100000,'Re della serata: tutti ti obbediscono 👑'],[300000,'JACKPOT! Servito e riverito per una settimana 🏆']
 ];
 const prizeFor = amt => { let t = PRIZES[0]; for(const p of PRIZES) if(p[0] <= amt) t = p; return t[1]; };
 const ROUNDS = [4,3,3,2,1,1];                    // pacchi da aprire a ogni giro (14 su 15)
 const COEF   = [.30,.42,.55,.68,.80,.92];        // quanto sale l'offerta "equa"
 const MSGS = ['Il Dottore ti saluta… 👋','Non fidarti del tuo pacco! 😈','Quest\'offerta scade tra 10 secondi ⏳',
               'Io al posto tuo accetterei… 😏','Sento puzza di jackpot 🏆','Hai le mani che tremano? 🥶'];
+const VOTE_BONUS = 250, BET_BONUS = 1000;      // euro per il pubblico
 const SPECIALS = {
   swap:   {em:'🔄', name:'Scambio forzato', text:'Il tuo pacco viene scambiato con un altro a caso!'},
   crowd:  {em:'🗳️', name:'Il pubblico decide', text:'Il pubblico sceglie il prossimo pacco da aprire!'},
@@ -167,7 +181,7 @@ function fresh(){ return {phase:'setup', players:[], mode:'all', idx:0, total:1,
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(G)); }catch(e){} }
 const mkPlayer = (p,i) => ({id:i+1, name:p.name, av:p.av, color:p.color, pid:p.pid || null, score:0,
-                            st:{docGain:0, bets:0, votes:0, rejected:0, redHeld:0}});
+                            st:{docGain:0, bets:0, votes:0, rejected:0, redHeld:0, reacts:0}});
 const byId = id => G.players.find(p => p.id === id);
 const linked = p => !!(p && p.pid && Net.online(p.pid));
 const M = () => G.m;
@@ -182,7 +196,13 @@ const pkgsOf = p => G.m.vals.map((_,i) => i).filter(i => G.m.holders[i] === p.id
 
 let TM = null, RING = null;
 function clearTimers(){ clearTimeout(TM); TM = null; clearInterval(RING); RING = null; }
-function go(stage){ clearTimers(); G.m.stage = stage; render(); }
+const DEADLINES = {bets:25, ring:60, offer:45, crowdvote:20};   // secondi: la pressione sale!
+function go(stage){
+  clearTimers(); G.m.stage = stage;
+  G.m.deadline = DEADLINES[stage] ? Date.now() + DEADLINES[stage] * 1000 : null;
+  render();
+}
+const secsLeft = () => G.m && G.m.deadline ? Math.max(0, Math.ceil((G.m.deadline - Date.now()) / 1000)) : null;
 const curOffer = () => G.m.offers[G.m.offers.length - 1];
 
 /* =====================================================================
@@ -190,7 +210,7 @@ const curOffer = () => G.m.offers[G.m.offers.length - 1];
    ===================================================================== */
 function startGame(){
   if(G.players.length < 3) return;
-  G.players.forEach(p => { p.score = 0; p.st = {docGain:0, bets:0, votes:0, rejected:0, redHeld:0}; });
+  G.players.forEach(p => { p.score = 0; p.st = {docGain:0, bets:0, votes:0, rejected:0, redHeld:0, reacts:0}; });
   G.idx = 0; G.total = G.mode === 'one' ? 1 : G.players.length;
   startMatch();
 }
@@ -201,7 +221,7 @@ function startMatch(){
   const vals = shuffle(VALUES);                                   // valori nascosti: li conosce solo l'app
   G.m = {conc, doc, vals, holders:vals.map((_,i) => pac[i % pac.length]), own:null, opened:Array(16).fill(false),
          specials:{}, spDone:{}, round:0, quota:0, calling:null, stage:'roles', draft:null, offers:[], dbl:false,
-         bets:{}, log:[], ticker:null, crowd:[], crowdVotes:{}, ownAtBet:null, end:null, result:null, msg:''};
+         bets:{}, log:[], ticker:null, whispers:{}, jolly:false, deadline:null, crowd:[], crowdVotes:{}, ownAtBet:null, end:null, result:null, msg:''};
   G.phase = 'play';
   clearTimers(); render();
   tone([[392,.12],[523,.12],[659,.12],[784,.25]]);
@@ -278,6 +298,83 @@ function runSpecial(kind){
     go('crowdvote');
   }
 }
+/* ---- jolly: il Concorrente chiede aiuto al pubblico (1 volta a partita) ---- */
+function doJolly(){
+  const m = M(); if(m.stage !== 'call' || m.jolly || others().length < 2) return;
+  m.jolly = true; m.crowd = shuffle(others()).slice(0, 3); m.crowdVotes = {};
+  m.log.push({t:'jolly'});
+  tone([[392,.1],[523,.1],[659,.2]]);
+  go('crowdvote');
+}
+/* ---- sussurri dei Pacchisti al Concorrente (anche bugie!) ---- */
+const WHISPERS = {acc:'Accetta! 💰', rej:'Rifiuta! 🙅', cam:'Cambia pacco! 🔄', ten:'Tieni il tuo! ✊', fid:'Fidati di me 😇', bug:'Il Dottore bluffa! 🤥'};
+function doWhisper(pid, key){
+  const m = M(); if(!['ring','offer'].includes(m.stage) || !WHISPERS[key]) return;
+  if(pid === m.conc || pid === m.doc) return;
+  m.whispers[pid] = key; tone([[1175,.06],[1568,.1]]); render();
+}
+/* ---- reazioni live del pubblico ---- */
+const REACTIONS = ['👏','😱','🤡','🔥','💀','🙏'];
+const lastReact = {};
+function clap(){
+  if(Party.muted) return;
+  try{
+    const ctx = Party._ctx = Party._ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const len = Math.floor(ctx.sampleRate * .16), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    for(let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const src = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = .45;
+    src.buffer = buf; src.connect(g).connect(ctx.destination); src.start();
+  }catch(e){}
+}
+function doReaction(p, emoji){
+  if(!REACTIONS.includes(emoji)) return;
+  const now = Date.now(); if(now - (lastReact[p.id] || 0) < 600) return; lastReact[p.id] = now;
+  p.st.reacts = (p.st.reacts || 0) + 1;
+  const layer = $('#fxlayer');
+  if(layer && layer.childElementCount < 14){
+    const el = document.createElement('div');
+    el.className = 'react'; el.style.left = (5 + Math.random() * 85) + 'vw';
+    el.style.setProperty('--r', (Math.random() * 40 - 20) + 'deg');
+    el.innerHTML = `${emoji}<small>${esc(p.av)} ${esc(p.name)}</small>`;
+    layer.appendChild(el); setTimeout(() => el.remove(), 3500);
+  }
+  if(emoji === '👏') clap();
+  else if(emoji === '😱') tone([[880,.08],[1175,.08],[1568,.2]]);
+  else if(emoji === '🤡') tone([[392,.18,'sawtooth'],[370,.18,'sawtooth'],[349,.18,'sawtooth'],[262,.5,'sawtooth']]);
+  else if(emoji === '🔥') tone([[330,.05],[494,.05],[659,.05],[988,.12]]);
+  else if(emoji === '💀') tone([[110,.35,'sawtooth']]);
+  else tone([[659,.15],[784,.25]]);
+}
+/* ---- tempo che scade ---- */
+function tick(){
+  if(G.phase !== 'play' || !G.m || !G.m.deadline) return;
+  const left = secsLeft(), tot = DEADLINES[G.m.stage] || 1;
+  document.querySelectorAll('[data-cd]').forEach(el => { el.textContent = left; });
+  const bar = document.querySelector('[data-cdbar]'); if(bar) bar.style.width = clamp(left / tot * 100, 0, 100) + '%';
+  if(left <= 5 && left > 0) tone([[660,.05,'square']]);
+  if(left <= 0) return timeout();
+  syncScreens();
+}
+function timeout(){
+  const m = M(), st = m.stage; m.deadline = null;
+  if(st === 'bets') startRound();
+  else if(st === 'ring'){ m.ticker = {text:'⏰ Tempo scaduto: offerta automatica!', t:Date.now()}; sendOffer(); }
+  else if(st === 'offer'){
+    const vs = Object.values(curOffer().votes), y = vs.filter(x => x === 'y').length;
+    m.log.push({t:'timeout'});
+    doDecision(y > vs.length - y ? 'accept' : 'reject');      // scaduto il tempo: decide il pubblico
+  }
+  else if(st === 'crowdvote') closeCrowd();
+}
+function cdHTML(){
+  const m = M(); if(!m.deadline) return '';
+  const left = secsLeft(), pct = clamp(left / (DEADLINES[m.stage] || 1) * 100, 0, 100);
+  return `<div class="cdwrap"><div class="cdtext">⏱ <b data-cd>${left}</b>s</div><div class="cdbar"><i data-cdbar style="width:${pct}%"></i></div></div>`;
+}
+function whisperLine(){
+  const names = Object.keys(M().whispers).map(id => byId(Number(id))).filter(Boolean);
+  return names.length ? `<div class="whisper">🤫 ${names.map(p => p.av + ' ' + esc(p.name)).join(', ')} ${names.length === 1 ? 'sussurra' : 'sussurrano'} al Concorrente…</div>` : '';
+}
 function specialDone(){ if(M().stage === 'special') advance(); }
 function doCrowd(pid, idx){
   const m = M(); if(m.stage !== 'crowdvote' || pid === m.conc || !m.crowd.includes(idx)) return;
@@ -297,20 +394,32 @@ function closeCrowd(){
 /* ---- il Dottore ---- */
 function fairOffer(){
   const r = remainingVals(), avg = r.reduce((a,b) => a + b, 0) / r.length;
-  return Math.round(avg * COEF[Math.min(M().round, COEF.length - 1)]);
+  return niceRound(avg * COEF[Math.min(M().round, COEF.length - 1)]);
+}
+function niceRound(x){                    // due cifre significative: 3.847 → 3.800
+  if(x < 10) return Math.round(x);
+  const step = Math.pow(10, Math.floor(Math.log10(x)) - 1);
+  return Math.round(x / step) * step;
+}
+function steps(){                          // passi dei pulsanti ± in base alla grandezza dell'offerta
+  const base = Math.max(M().draft ? M().draft.fair : 10, 10);
+  const small = Math.pow(10, Math.max(0, Math.floor(Math.log10(base)) - 1));
+  return {small, big:small * 5};
 }
 function toRing(){
   const m = M();
   m.draft = {amount:fairOffer(), fair:fairOffer(), cambio:false};
+  m.whispers = {};
   go('ring');
   RING = setInterval(() => tone([[880,.12,'square'],[698,.12,'square'],[880,.12,'square'],[698,.12,'square']]), 1800);
 }
 function docAdj(op){
   const m = M(), d = m.draft; if(!d || m.stage !== 'ring') return;
-  const max = Math.max(...remainingVals()) * 1.2 + 5;
-  const ops = {m5:a => a - 5, m1:a => a - 1, p1:a => a + 1, p5:a => a + 5,
+  const max = Math.max(...remainingVals());
+  const st = steps();
+  const ops = {m5:a => a - st.big, m1:a => a - st.small, p1:a => a + st.small, p5:a => a + st.big,
                x50:a => a * .5, x75:a => a * .75, x125:a => a * 1.25, x150:a => a * 1.5, fair:() => d.fair};
-  if(ops[op]) d.amount = clamp(Math.round(ops[op](d.amount)), 0, Math.round(max));
+  if(ops[op]) d.amount = clamp(niceRound(ops[op](d.amount)), 0, max);
   render();
 }
 function docCambio(){ const d = M().draft; if(d && M().stage === 'ring'){ d.cambio = !d.cambio; render(); } }
@@ -372,18 +481,18 @@ function showResult(){
   const win = e.kind === 'deal' ? e.amount : v;
   const gains = {}; const add = (id, n) => { gains[id] = (gains[id] || 0) + n; };
   add(conc.id, win);
-  if(e.kind === 'deal'){ const g = clamp(v - e.amount, -20, 20); add(doc.id, g); doc.st.docGain += g; }
+  if(e.kind === 'deal'){ const g = clamp(v - e.amount, -25000, 25000); add(doc.id, g); doc.st.docGain += g; }
   m.offers.forEach(o => Object.entries(o.votes).forEach(([pid, vt]) => {
-    if((vt === 'y') === (o.amount >= v)){ add(Number(pid), 1); const p = byId(Number(pid)); if(p) p.st.votes++; }
+    if((vt === 'y') === (o.amount >= v)){ add(Number(pid), VOTE_BONUS); const p = byId(Number(pid)); if(p) p.st.votes++; }
   }));
   const redInit = isRed(m.ownAtBet);
   Object.entries(m.bets).forEach(([pid, c]) => {
-    if((c === 'red') === redInit){ add(Number(pid), 3); const p = byId(Number(pid)); if(p) p.st.bets++; }
+    if((c === 'red') === redInit){ add(Number(pid), BET_BONUS); const p = byId(Number(pid)); if(p) p.st.bets++; }
   });
   Object.entries(gains).forEach(([id, n]) => { const p = byId(Number(id)); if(p) p.score += n; });
   m.result = {win, v, kind:e.kind, amount:e.amount, gains, prize:prizeFor(win), regret:e.kind === 'deal' ? v - e.amount : 0};
   m.stage = 'end'; render();
-  if(win >= 20){ tone([[523,.12],[659,.12],[784,.12],[1047,.12],[784,.12],[1047,.5]]); burst(['🏆','🎉','🥳','💰'], 50); }
+  if(win >= RED_FROM){ tone([[523,.12],[659,.12],[784,.12],[1047,.12],[784,.12],[1047,.5]]); burst(['🏆','🎉','🥳','💰'], 50); }
   else{ tone([[392,.2],[330,.2],[262,.4]]); burst(['🧽','😅'], 14); }
 }
 function nextMatch(){
@@ -468,7 +577,8 @@ function viewSetup(){
         <li><span class="e">🎯</span><div><b>IL CONCORRENTE</b><span>Sceglie il suo pacco, poi quali aprire. Accetta o rifiuta le offerte e il cambio.</span></div></li>
         <li><span class="e">📞</span><div><b>IL DOTTORE</b><span>È la banca: parte dall'offerta "equa" e la alza, la abbassa o propone il cambio. Può mandare messaggi di pressione!</span></div></li>
         <li><span class="e">📦</span><div><b>I PACCHISTI</b><span>Tengono i pacchi: quando tocca al loro lo aprono dal telefono, tra suspense e fischi.</span></div></li>
-        <li><span class="e">🗳️</span><div><b>IL PUBBLICO</b><span>Tutti scommettono sul colore del pacco e votano Accetta/Rifiuta in tempo reale. Così vincono punti anche i non giocanti!</span></div></li>
+        <li><span class="e">🗳️</span><div><b>IL PUBBLICO</b><span>Tutti scommettono sul colore del pacco e votano Accetta/Rifiuta in tempo reale. Così vincono soldi anche i non giocanti!</span></div></li>
+        <li><span class="e">🎉</span><div><b>REAZIONI E SUSSURRI</b><span>Dal telefono tutti mandano 👏😱🤡🔥 sullo schermo. I Pacchisti possono sussurrare consigli al Concorrente… e mentire!</span></div></li>
         <li><span class="e">⭐</span><div><b>PACCHI SPECIALI</b><span>Scambio forzato, il pubblico decide, offerta raddoppiata… sono nascosti tra i pacchi!</span></div></li>
       </ul>
     </section>
@@ -489,7 +599,7 @@ function topbar(){
 
 const ladder = side => {
   const list = VALUES.filter(v => side === 'red' ? isRed(v) : !isRed(v));
-  return `<div class="ladder">${list.map(v => `<div class="v ${side} ${isGone(v) ? 'gone' : ''}">${v}</div>`).join('')}</div>`;
+  return `<div class="ladder">${list.map(v => `<div class="v ${side} ${isGone(v) ? 'gone' : ''}">${fmtN(v)} €</div>`).join('')}</div>`;
 };
 
 function rolesStrip(){
@@ -507,7 +617,7 @@ function pkgGrid(clickable){
     const can = clickable && !open && !own;
     return `<${can ? 'button' : 'div'} class="pkg ${open ? 'open ' + (isRed(v) ? 'red' : 'blue') : ''} ${own ? 'own' : ''} ${m.calling === i && ['opening','suspense','reveal'].includes(m.stage) ? 'calling' : ''}
       ${!open && m.specials[i] && m.own !== null ? 'sp' : ''} ${can ? 'btnlike' : ''}" ${can ? `onclick="${clickable}(${i})"` : ''}>
-      ${open ? v : (own ? 'TUO' : i + 1)}<small>${open ? '#' + (i + 1) : own ? '#' + (i + 1) : (h ? h.av : '')}</small></${can ? 'button' : 'div'}>`;
+      ${open ? fmtShort(v) : (own ? 'TUO' : i + 1)}<small>${open ? '#' + (i + 1) : own ? '#' + (i + 1) : (h ? h.av : '')}</small></${can ? 'button' : 'div'}>`;
   }).join('')}</div>`;
 }
 
@@ -532,9 +642,9 @@ function composerHTML(){
   const b = (op, label) => `<button class="btn small ghost" onclick="docAdj('${op}')">${label}</button>`;
   return `<div class="stage" style="min-height:0;background:#0003">
     <div class="lead">La tua offerta${m.dbl ? ' — ⚠️ RADDOPPIATA: vale ×2!' : ''}</div>
-    <div class="offer-amt" style="font-size:4rem">${eff}</div>
-    <div class="actions">${b('m5','−5')}${b('m1','−1')}${b('p1','+1')}${b('p5','+5')}</div>
-    <div class="actions">${b('x50','−50%')}${b('x75','−25%')}${b('fair','Equa (' + d.fair + ')')}${b('x125','+25%')}${b('x150','+50%')}</div>
+    <div class="offer-amt" style="font-size:3.4rem">${fmt(eff)}</div>
+    <div class="actions">${b('m5','−' + fmtN(steps().big))}${b('m1','−' + fmtN(steps().small))}${b('p1','+' + fmtN(steps().small))}${b('p5','+' + fmtN(steps().big))}</div>
+    <div class="actions">${b('x50','−50%')}${b('x75','−25%')}${b('fair','Equa (' + fmt(d.fair) + ')')}${b('x125','+25%')}${b('x150','+50%')}</div>
     <div class="actions"><button class="btn small ${d.cambio ? '' : 'ghost'}" onclick="docCambio()">🔄 Proponi cambio ${d.cambio ? '✔' : ''}</button></div>
     <div class="actions">${MSGS.slice(0,3).map((t,i) => `<button class="btn small ghost" onclick="docMsg(MSGS[${i}])">${esc(t)}</button>`).join('')}</div>
     <button class="btn big ok" onclick="sendOffer()">📞 Invia offerta</button></div>`;
@@ -572,7 +682,8 @@ function stageHTML(){
       <span class="badge">SCOMMESSE DEL PUBBLICO</span>
       <div class="big">Il pacco di ${esc(conc.name)} è BLU o ROSSO?</div>
       <div class="chips">${aud.map(p => `<span class="chip ${m.bets[p.id] ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${m.bets[p.id] ? '✔' : '…'}</span>`).join('')}</div>
-      <p class="hint">Indovinare vale +3 punti. Blu = meno di 20 · Rosso = 20 o più.</p>
+      <p class="hint">Indovinare vale +${fmt(BET_BONUS)}. Blu = fino a 500 € · Rosso = da 5.000 € in su.</p>
+      ${cdHTML()}
       ${manualRow('bet')}
       <button class="btn" onclick="startRound()">Avanti ▶</button>`;
     }
@@ -580,18 +691,20 @@ function stageHTML(){
       <div class="lead">Giro ${m.round + 1} · da aprire: <b>${m.quota}</b></div>
       <div class="big">📦 ${esc(conc.name)}, quale pacco apri?</div>
       ${ticker}
-      <p class="hint">${needConc ? 'Tocca un pacco qui sotto.' : 'Il Concorrente sceglie dal telefono.'}</p>`;
+      <p class="hint">${needConc ? 'Tocca un pacco qui sotto.' : 'Il Concorrente sceglie dal telefono.'}</p>
+      ${!m.jolly && needConc && others().length > 1 ? '<button class="btn small" onclick="doJolly()">🆘 Jolly: chiedi al pubblico</button>' : ''}
+      ${m.jolly ? '<p class="hint">🆘 Jolly già usato</p>' : ''}`;
     case 'opening': return `
       <div class="lead">Il pacco n.${m.calling + 1} è nelle mani di</div>
       <div class="big">${holder ? holder.av + ' ' + esc(holder.name) : ''}</div>
-      <p class="hint">${linked(holder) ? 'Aprilo dal tuo telefono quando sei pronto…' : 'Pacchista senza telefono: premi tu!'}</p>
+      <p class="hint">${linked(holder) ? '💪 Deve rompere il sigillo a colpi di tap sul suo telefono…' : 'Pacchista senza telefono: premi tu!'}</p>
       ${!linked(holder) ? '<button class="btn big" onclick="doOpen()">🎁 Apri il pacco</button>' : ''}`;
     case 'suspense': return `<div class="drum"><div class="lead">${holder ? esc(holder.name) : ''} apre il pacco n.${m.calling + 1}…</div><div class="huge">???</div></div>`;
     case 'reveal': {
       const v = m.vals[m.calling];
       return `
       <div class="lead">Il pacco n.${m.calling + 1} conteneva</div>
-      <div class="huge ${isRed(v) ? 'red' : 'blue'}">${v}</div>
+      <div class="huge ${isRed(v) ? 'red' : 'blue'}" style="font-size:clamp(3rem,10vw,7rem)">${fmt(v)}</div>
       <div class="big">${isRed(v) ? '🔴 Ahi, un premio grosso se n\'è andato!' : '🔵 Meno male, era uno piccolo!'}</div>
       <button class="btn" onclick="afterReveal()">Continua ▶</button>`;
     }
@@ -603,7 +716,8 @@ function stageHTML(){
     }
     case 'crowdvote': return `
       <div class="huge">🗳️</div><div class="big">Il pubblico decide!</div>
-      <div class="lead">Scegliete quale pacco aprire adesso:</div>
+      <div class="lead">${m.jolly && m.log.some(l => l.t === 'jolly') ? '🆘 Jolly di ' + esc(conc.name) + '! ' : ''}Scegliete quale pacco aprire adesso:</div>
+      ${cdHTML()}
       <div class="cands">${m.crowd.map(i => `<div class="pkg">${i + 1}<small>${(byId(m.holders[i]) || {av:''}).av}</small></div>`).join('')}</div>
       <div class="chips">${audience().map(p => `<span class="chip ${m.crowdVotes[p.id] !== undefined ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${m.crowdVotes[p.id] !== undefined ? '✔' : '…'}</span>`).join('')}</div>
       ${manualRow('crowd')}
@@ -613,14 +727,18 @@ function stageHTML(){
       <div class="big">Squilla il telefono del Dottore!</div>
       <div class="lead">${doc.av} ${esc(doc.name)} sta preparando un'offerta per ${esc(conc.name)}…</div>
       ${ticker}
+      ${whisperLine()}
+      ${cdHTML()}
       ${needDoc ? composerHTML() : '<p class="hint">Il Dottore usa il suo telefono.</p>'}`;
     case 'offer': {
       const o = curOffer();
       return `
       <div class="lead">📞 Offerta del Dottore${o.dbl ? ' <b>(×2 per il pacco speciale!)</b>' : ''}</div>
-      <div class="offer-amt">${o.amount}</div>
+      <div class="offer-amt">${fmt(o.amount)}</div>
       ${ticker}
       ${o.cambio !== null ? `<div class="lead">🔄 In più propone il cambio con il pacco n.${o.cambio + 1}!</div>` : ''}
+      ${cdHTML()}
+      ${whisperLine()}
       <div class="lead">Il pubblico dice…</div>
       ${tally()}
       ${manualRow('vote')}
@@ -648,14 +766,16 @@ function replayLines(){
   m.log.forEach(l => {
     const h = l.by ? byId(l.by) : null;
     if(l.t === 'pick') lines.push([`🎯 ${esc(byId(m.conc).name)} sceglie il suo pacco ${pk(l.pkg)}`, false]);
-    else if(l.t === 'open') lines.push([`📦 Pacco ${pk(l.pkg)} di ${h ? esc(h.name) : '?'} → ${isRed(l.v) ? '🔴' : '🔵'} <b>${l.v}</b>${l.v === biggest && l.v >= 20 ? ' 💥 il disastro!' : ''}`, l.v === biggest && l.v >= 20]);
+    else if(l.t === 'open') lines.push([`📦 Pacco ${pk(l.pkg)} di ${h ? esc(h.name) : '?'} → ${isRed(l.v) ? '🔴' : '🔵'} <b>${fmt(l.v)}</b>${l.v === biggest && l.v >= RED_FROM ? ' 💥 il disastro!' : ''}`, l.v === biggest && l.v >= RED_FROM]);
     else if(l.t === 'swap') lines.push([`🔄 Scambio forzato: ${pk(l.from)} → ${pk(l.to)}`, false]);
     else if(l.t === 'double') lines.push(['💥 Offerta raddoppiata!', false]);
     else if(l.t === 'crowd') lines.push(['🗳️ Il pubblico ha scelto il pacco da aprire', false]);
-    else if(l.t === 'offer') lines.push([`📞 Il Dottore offre <b>${l.amount}</b>`, false]);
-    else if(l.t === 'reject') lines.push([`❌ ${esc(byId(m.conc).name)} rifiuta ${l.amount}`, false]);
+    else if(l.t === 'offer') lines.push([`📞 Il Dottore offre <b>${fmt(l.amount)}</b>`, false]);
+    else if(l.t === 'reject') lines.push([`❌ ${esc(byId(m.conc).name)} rifiuta ${fmt(l.amount)}`, false]);
     else if(l.t === 'cambio') lines.push([`🔄 Cambio accettato: ${pk(l.from)} → ${pk(l.to)}`, false]);
-    else if(l.t === 'deal') lines.push([`✅ Affare fatto a <b>${l.amount}</b>!`, true]);
+    else if(l.t === 'jolly') lines.push(['🆘 Jolly: il pubblico sceglie il pacco', false]);
+    else if(l.t === 'timeout') lines.push(['⏰ Tempo scaduto: ha deciso il pubblico!', false]);
+    else if(l.t === 'deal') lines.push([`✅ Affare fatto a <b>${fmt(l.amount)}</b>!`, true]);
     else if(l.t === 'switch') lines.push([`🔄 Cambio finale: ${pk(l.from)} → ${pk(l.to)}`, true]);
     else if(l.t === 'keep') lines.push(['✊ Tiene il suo pacco fino alla fine', true]);
   });
@@ -666,21 +786,21 @@ function endHTML(){
   const m = M(), r = m.result, conc = byId(m.conc), doc = byId(m.doc);
   let headline;
   if(r.kind === 'deal') headline = r.regret > 0
-    ? `😭 Accettato ${r.amount}… ma nel pacco c'era ${r.v}! Rimpianto: ${r.regret}`
-    : r.regret < 0 ? `😎 Che colpo! Accettato ${r.amount} e nel pacco c'era solo ${r.v}` : `🎯 Cifra esatta!`;
-  else headline = `🎁 Nel pacco c'era… ${r.v}!`;
+    ? `😭 Accettato ${fmt(r.amount)}… ma nel pacco c'erano ${fmt(r.v)}! Rimpianto: ${fmt(r.regret)}`
+    : r.regret < 0 ? `😎 Che colpo! Accettato ${fmt(r.amount)} e nel pacco c'erano solo ${fmt(r.v)}` : `🎯 Cifra esatta!`;
+  else headline = `🎁 Nel pacco c'erano… ${fmt(r.v)}!`;
   const rows = Object.entries(r.gains).filter(([,n]) => n !== 0).sort((a,b) => b[1] - a[1]).map(([id,n]) => {
     const p = byId(Number(id));
     const tag = p.id === m.conc ? '🎯 Concorrente' : p.id === m.doc ? '📞 Dottore' : '🗳️ Pubblico';
     return `<div class="gain" style="--c:${p.color}"><span>${p.av}</span><span class="nm">${esc(p.name)} <small style="color:var(--mute)">${tag}</small></span>
-      <span class="d ${n < 0 ? 'neg' : ''}">${n > 0 ? '+' : ''}${n}</span></div>`;
+      <span class="d ${n < 0 ? 'neg' : ''}" style="font-size:1.1rem">${n > 0 ? '+' : ''}${fmt(n)}</span></div>`;
   }).join('');
   const lines = replayLines();
   return `
     <span class="badge">FINE DELLA PARTITA ${G.idx + 1} DI ${G.total}</span>
-    <div class="huge ${isRed(r.v) ? 'red' : 'blue'}">${r.v}</div>
+    <div class="huge ${isRed(r.v) ? 'red' : 'blue'}" style="font-size:clamp(3rem,10vw,7rem)">${fmt(r.v)}</div>
     <div class="big">${headline}</div>
-    <div class="lead">🎁 ${conc.av} ${esc(conc.name)} vince <b>${r.win}</b> punti e il pegno/premio:</div>
+    <div class="lead">🎁 ${conc.av} ${esc(conc.name)} porta a casa <b>${fmt(r.win)}</b> e il pegno/premio:</div>
     <div class="big" style="font-size:clamp(1.4rem,3.6vw,2.4rem);color:var(--gold)">${esc(r.prize)}</div>
     <div class="result">${rows}</div>
     <div class="lead">🎬 Il replay della partita</div>
@@ -692,7 +812,7 @@ function scoreboard(){
   const m = M();
   return `<div class="score">${G.players.map(p => `
     <div class="pl" style="--c:${p.color}"><div class="who"><span>${p.av}</span><span class="nm">${esc(p.name)}</span>${linked(p) ? '<span title="Telefono">📱</span>' : ''}</div>
-      <div class="pts ${p.score < 0 ? 'neg' : ''}">${p.score}</div>
+      <div class="pts ${p.score < 0 ? 'neg' : ''}" style="font-size:1.4rem">${fmt(p.score)}</div>
       <div class="role">${m ? (roleOf(p) === 'conc' ? '🎯 CONCORRENTE' : roleOf(p) === 'doc' ? '📞 DOTTORE' : '📦 PACCHISTA') : ''}</div></div>`).join('')}</div>`;
 }
 
@@ -716,20 +836,21 @@ function viewPlay(){
 function viewFinal(){
   const r = [...G.players].sort((a,b) => b.score - a.score);
   const tie = r.length > 1 && r[0].score === r[1].score;
-  const slot = (p,k) => p ? `<div class="step p${k}" style="--c:${p.color}"><div class="av">${p.av}</div><div><b>${esc(p.name)}</b></div><div class="pts">${p.score}</div></div>` : '';
+  const slot = (p,k) => p ? `<div class="step p${k}" style="--c:${p.color}"><div class="av">${p.av}</div><div><b>${esc(p.name)}</b></div><div class="pts" style="font-size:1.3rem">${fmt(p.score)}</div></div>` : '';
   const top = fn => { const s = [...G.players].sort((a,b) => fn(b) - fn(a)); return fn(s[0]) > 0 ? s[0] : null; };
   const awards = [
-    [top(p => p.st.docGain), '📞', 'Il Dottore Spietato', p => `${p.st.docGain} punti rubati ai concorrenti`],
+    [top(p => p.st.docGain), '📞', 'Il Dottore Spietato', p => `${fmt(p.st.docGain)} guadagnati sulle spalle dei concorrenti`],
     [top(p => p.st.bets), '🔮', 'Il Veggente', p => `${p.st.bets} colori azzeccati`],
     [top(p => p.st.votes), '🧠', 'Il Fiuto Infallibile', p => `${p.st.votes} voti giusti`],
     [top(p => p.st.rejected), '🧊', 'Nervi d\'Acciaio', p => `${p.st.rejected} offerte rifiutate`],
+    [top(p => p.st.reacts), '🎉', 'L\'Anima della Festa', p => `${p.st.reacts} reazioni mandate!`],
     [top(p => p.st.redHeld), '🔴', 'Il Menagramo', p => `${p.st.redHeld} pacchi rossi aperti: lo temevano tutti!`]
   ].filter(a => a[0]);
   return `${topbar()}
   <main class="stage end">
     <h1>${tie ? 'PAREGGIO EPICO!' : '🏆 ' + esc(r[0].name.toUpperCase()) + ' VINCE LA SERATA!'}</h1>
     <div class="podium">${slot(r[1],2)}${slot(r[0],1)}${slot(r[2],3)}</div>
-    ${r.length > 3 ? `<p class="hint">${r.slice(3).map((p,i) => `${i + 4}. ${p.av} ${esc(p.name)} (${p.score})`).join(' · ')}</p>` : ''}
+    ${r.length > 3 ? `<p class="hint">${r.slice(3).map((p,i) => `${i + 4}. ${p.av} ${esc(p.name)} (${fmt(p.score)})`).join(' · ')}</p>` : ''}
     <div class="awards">${awards.map(([p,e,t,f]) => `<div class="award"><span class="e">${e}</span><div><b>${t}</b><span>${p.av} ${esc(p.name)} · ${f(p)}</span></div></div>`).join('')}</div>
     <div class="actions">
       <button class="btn big" onclick="startGame()">🔁 Rivincita</button>
@@ -748,7 +869,7 @@ const hash = str => { let h = 5381; for(let i = 0; i < str.length; i++) h = ((h 
 const playerByPid = pid => G.players.find(p => p.pid === pid);
 const opt = (id, label, extra = {}) => ({id, label, ...extra});
 const waitScreen = (emoji, title, text, extra = {}) => ({emoji, title, text, wait:true, groups:[], ...extra});
-const valuesBoard = () => G.m ? VALUES.map(v => ({t:String(v), red:isRed(v), gone:isGone(v)})) : [];
+const valuesBoard = () => G.m ? VALUES.map(v => ({t:fmtShort(v) + '€', red:isRed(v), gone:isGone(v)})) : [];
 
 function adoptMembers(){
   let changed = false;
@@ -772,6 +893,10 @@ function unlinkedScreen(){
   return waitScreen('👀', 'Spettatore', 'La partita è in corso: guarda lo schermo!');
 }
 
+function whispersFor(){
+  const m = G.m;
+  return Object.entries(m.whispers || {}).map(([id, k]) => { const p = byId(Number(id)); return p ? `🤫 ${p.name}: ${WHISPERS[k]}` : null; }).filter(Boolean);
+}
 function pkgOptions(){
   const m = G.m;
   return m.vals.map((_,i) => i).filter(i => !m.opened[i] && i !== m.own)
@@ -806,22 +931,24 @@ function screenFor(p){
     case 'bets':
       return role === 'conc'
         ? waitScreen('🙈', 'Il pubblico scommette!', 'Sul colore del tuo pacco…', {values:vb})
-        : {emoji:'🔮', title:`Il pacco di ${conc.name} è…`, text:'Indovinare vale +3 punti.', values:vb, selected:m.bets[p.id] ? ['b:' + m.bets[p.id]] : [],
-           groups:[{layout:'grid', options:[opt('b:blue', 'BLU', {emoji:'🔵', sub:'meno di 20'}), opt('b:red', 'ROSSO', {emoji:'🔴', sub:'20 o più', tone:'ko'})]}]};
+        : {emoji:'🔮', title:`Il pacco di ${conc.name} è…`, text:`Indovinare vale +${fmt(BET_BONUS)}.`, values:vb, selected:m.bets[p.id] ? ['b:' + m.bets[p.id]] : [],
+           groups:[{layout:'grid', options:[opt('b:blue', 'BLU', {emoji:'🔵', sub:'fino a 500 €'}), opt('b:red', 'ROSSO', {emoji:'🔴', sub:'da 5.000 € in su', tone:'ko'})]}]};
     case 'call':
-      if(role === 'conc') return {emoji:'📦', title:`Apri ${m.quota} ${m.quota === 1 ? 'pacco' : 'pacchi'}`, text:ticker || 'Quale pacco vuoi aprire?', values:vb, groups:[{layout:'grid', options:pkgOptions()}]};
+      if(role === 'conc') return {emoji:'📦', title:`Apri ${m.quota} ${m.quota === 1 ? 'pacco' : 'pacchi'}`, text:ticker || 'Quale pacco vuoi aprire?', values:vb,
+        groups:[{layout:'grid', options:pkgOptions()},
+                ...(!m.jolly && others().length > 1 ? [{options:[opt('jolly', 'Jolly: chiedi al pubblico (1 volta)', {emoji:'🆘'})]}] : [])]};
       return waitScreen(role === 'doc' ? '📞' : '📦', `${conc.name} sceglie i pacchi…`, ticker || `Restano da aprire: ${m.quota}`,
         {values:vb, tags:undefined});
     case 'opening':
-      if(isHolder) return {emoji:'🎁', title:`Il tuo pacco n.${m.calling + 1}!`, text:'Il Concorrente l\'ha chiamato. Sei pronto?', values:vb,
-                           groups:[{options:[opt('open', 'Apri il pacco!', {emoji:'🎁', tone:'ok'})]}], buzz:true};
+      if(isHolder) return {emoji:'🎁', title:`Il tuo pacco n.${m.calling + 1}!`, text:'Il Concorrente l\'ha chiamato: rompi il sigillo!', values:vb,
+                           tap:{goal:12, id:'open', label:'💪 TOCCA, TOCCA, TOCCA!'}, groups:[], buzz:true};
       return waitScreen('📦', `Il pacco n.${m.calling + 1} sta per essere aperto…`, `È di ${holder ? holder.name : '?'}`, {values:vb, anim:'drum'});
     case 'suspense': return waitScreen('🥁', '…', `Il pacco n.${m.calling + 1}`, {anim:'drum', values:vb});
     case 'reveal': {
       const v = m.vals[m.calling], red = isRed(v);
-      if(isHolder) return waitScreen(red ? '🎉' : '😒', red ? `ROSSO! ${v}` : `Blu… ${v}`, red ? 'Festa! Il Concorrente piange!' : 'Fischi! Un premio piccolo…', {values:vb, fx:red ? 'party' : 'boo', big:String(v)});
-      if(role === 'conc') return waitScreen(red ? '😱' : '😎', `${v}`, red ? 'Ahi, un premio grosso se ne va!' : 'Evviva, era uno piccolo!', {values:vb, fx:red ? 'boo' : 'party'});
-      return waitScreen(red ? '🔴' : '🔵', `${v}`, `Pacco n.${m.calling + 1}`, {values:vb});
+      if(isHolder) return waitScreen(red ? '🎉' : '😒', red ? `ROSSO! ${fmt(v)}` : `Blu… ${fmt(v)}`, red ? 'Festa! Il Concorrente piange!' : 'Fischi! Un premio piccolo…', {values:vb, fx:red ? 'party' : 'boo', big:fmt(v)});
+      if(role === 'conc') return waitScreen(red ? '😱' : '😎', `${fmt(v)}`, red ? 'Ahi, un premio grosso se ne va!' : 'Evviva, era uno piccolo!', {values:vb, fx:red ? 'boo' : 'party'});
+      return waitScreen(red ? '🔴' : '🔵', `${fmt(v)}`, `Pacco n.${m.calling + 1}`, {values:vb});
     }
     case 'special': {
       const sp = SPECIALS[m.specials[m.calling]];
@@ -836,11 +963,11 @@ function screenFor(p){
       if(role === 'doc'){
         const d = m.draft, eff = d.amount * (m.dbl ? 2 : 1);
         const adj = (id, label) => opt('a:' + id, label);
-        return {emoji:'📞', title:m.dbl ? '⚠️ Offerta RADDOPPIATA!' : 'Prepara l\'offerta', big:String(eff),
-          text:`Equa: ${d.fair} · media rimasta: ${(remainingVals().reduce((a,b) => a + b, 0) / remainingVals().length).toFixed(1)}${m.dbl ? ' · quello che scrivi vale ×2' : ''}`,
+        return {emoji:'📞', title:m.dbl ? '⚠️ Offerta RADDOPPIATA!' : 'Prepara l\'offerta', big:fmt(eff),
+          text:`Equa: ${fmt(d.fair)} · media rimasta: ${fmt(Math.round(remainingVals().reduce((a,b) => a + b, 0) / remainingVals().length))}${m.dbl ? ' · quello che scrivi vale ×2' : ''}`,
           values:vb,
           groups:[
-            {title:'Aggiusta', layout:'grid', options:[adj('m5','−5'), adj('m1','−1'), adj('p1','+1'), adj('p5','+5')]},
+            {title:'Aggiusta', layout:'grid', options:[adj('m5','−' + fmtN(steps().big)), adj('m1','−' + fmtN(steps().small)), adj('p1','+' + fmtN(steps().small)), adj('p5','+' + fmtN(steps().big))]},
             {title:'Percentuali', layout:'grid', options:[adj('x50','−50%'), adj('x75','−25%'), adj('fair','Equa'), adj('x125','+25%'), adj('x150','+50%')]},
             {options:[opt('cambio', d.cambio ? 'Cambio proposto ✔' : 'Proponi anche il cambio', {emoji:'🔄', tone:d.cambio ? 'sel' : ''})]},
             {title:'Metti pressione', layout:'list', options:MSGS.map((t,i) => opt('m:' + i, t))},
@@ -848,21 +975,25 @@ function screenFor(p){
           ],
           input:{id:'msg', placeholder:'Scrivi un messaggio per il Concorrente…', max:70, label:'Invia messaggio'}};
       }
-      if(role === 'conc') return waitScreen('📞', 'Il Dottore ti sta chiamando…', ticker || 'Preparati all\'offerta!', {anim:'ring', buzz:true, values:vb});
-      return waitScreen('📞', 'Squilla il telefono del Dottore!', ticker || 'Preparati a votare l\'offerta.', {anim:'ring', values:vb});
+      if(role === 'conc') return waitScreen('📞', 'Il Dottore ti sta chiamando…', ticker || 'Preparati all\'offerta!', {anim:'ring', buzz:true, values:vb, notes:whispersFor()});
+      return {emoji:'📞', title:'Squilla il telefono del Dottore!', text:ticker || 'Intanto sussurra qualcosa al Concorrente… (puoi anche mentire!)', values:vb, anim:'ring', wait:true,
+              selected:m.whispers[p.id] ? ['w:' + m.whispers[p.id]] : [],
+              groups:[{title:'🤫 Sussurra al Concorrente', layout:'grid', options:Object.entries(WHISPERS).map(([k,t]) => opt('w:' + k, t))}]};
     }
     case 'offer': {
       const o = curOffer();
       const tl = voters().reduce((a, v) => { const x = o.votes[v.id]; if(x) a[x]++; return a; }, {y:0, n:0});
       const crowdTxt = `Pubblico: ✅ ${tl.y} · ❌ ${tl.n}`;
-      if(role === 'conc') return {emoji:'💰', title:'Offerta del Dottore', big:String(o.amount),
-        text:[o.dbl ? '(×2 pacco speciale!)' : '', ticker, crowdTxt].filter(Boolean).join(' · '), values:vb, buzz:true,
+      if(role === 'conc') return {emoji:'💰', title:'Offerta del Dottore', big:fmt(o.amount),
+        text:[o.dbl ? '(×2 pacco speciale!)' : '', ticker, crowdTxt].filter(Boolean).join(' · '), values:vb, buzz:true, notes:whispersFor(),
         groups:[{layout:'grid', options:[opt('accept', 'Accetto', {emoji:'✅', tone:'ok'}), opt('reject', 'Rifiuto', {emoji:'❌', tone:'ko'})]},
                 ...(o.cambio !== null ? [{options:[opt('cambio', `Cambio col pacco n.${o.cambio + 1}`, {emoji:'🔄'})]}] : [])]};
-      if(role === 'doc') return waitScreen('📞', `Offerta inviata: ${o.amount}`, `${conc.name} sta decidendo… ${crowdTxt}`, {values:vb});
-      return {emoji:'🗳️', title:`Offerta: ${o.amount}`, big:String(o.amount), values:vb,
-        text:`${o.cambio !== null ? 'Con proposta di cambio. ' : ''}Cosa deve fare ${conc.name}?`, selected:o.votes[p.id] ? ['v:' + o.votes[p.id]] : [],
-        groups:[{layout:'grid', options:[opt('v:y', 'Accetta', {emoji:'✅', tone:'ok'}), opt('v:n', 'Rifiuta', {emoji:'❌', tone:'ko'})]}]};
+      if(role === 'doc') return waitScreen('📞', `Offerta inviata: ${fmt(o.amount)}`, `${conc.name} sta decidendo… ${crowdTxt}`, {values:vb});
+      return {emoji:'🗳️', title:`Offerta: ${fmt(o.amount)}`, big:fmt(o.amount), values:vb,
+        text:`${o.cambio !== null ? 'Con proposta di cambio. ' : ''}Cosa deve fare ${conc.name}?`,
+        groups:[{layout:'grid', options:[opt('v:y', 'Accetta', {emoji:'✅', tone:'ok'}), opt('v:n', 'Rifiuta', {emoji:'❌', tone:'ko'})]},
+                {title:'🤫 Sussurra al Concorrente (anche una bugia!)', layout:'grid', options:Object.entries(WHISPERS).map(([k,t]) => opt('w:' + k, t))}],
+        selected:[...(o.votes[p.id] ? ['v:' + o.votes[p.id]] : []), ...(m.whispers[p.id] ? ['w:' + m.whispers[p.id]] : [])]};
     }
     case 'switch':
       return role === 'conc'
@@ -872,8 +1003,8 @@ function screenFor(p){
     case 'finalreveal': return waitScreen('🥁', 'Il momento della verità…', `Il pacco n.${m.own + 1} di ${conc.name}`, {anim:'drum'});
     case 'end': {
       const r = m.result, g = r.gains[p.id] || 0;
-      return waitScreen(role === 'conc' ? (r.win >= 20 ? '🏆' : '🧽') : '📊', role === 'conc' ? `Hai vinto ${r.win}!` : `Il pacco valeva ${r.v}`,
-        `${role === 'conc' ? r.prize + ' · ' : ''}Tu: ${g >= 0 ? '+' : ''}${g} punti`, {fx:role === 'conc' && r.win >= 20 ? 'party' : undefined});
+      return waitScreen(role === 'conc' ? (r.win >= RED_FROM ? '🏆' : '🧽') : '📊', role === 'conc' ? `Hai vinto ${fmt(r.win)}!` : `Il pacco valeva ${fmt(r.v)}`,
+        `${role === 'conc' ? r.prize + ' · ' : ''}Tu: ${g >= 0 ? '+' : ''}${fmt(g)}`, {fx:role === 'conc' && r.win >= RED_FROM ? 'party' : undefined});
     }
   }
   return waitScreen('⏳', 'Un attimo…', '');
@@ -887,6 +1018,7 @@ function syncScreens(){
     let s;
     try{ s = p ? {...screenFor(p), me:{av:p.av, name:p.name, color:p.color, score:p.score}} : unlinkedScreen(); }
     catch(e){ console.error(e); s = waitScreen('⏳', 'Un attimo…', ''); }
+    if(G.phase === 'play'){ s.react = REACTIONS; const left = secsLeft(); if(left !== null && !s.tap) s.timer = left; }
     const {timer, ...core} = s;
     s.sid = hash(JSON.stringify(core));
     LAST[mem.pid] = s; screens[mem.pid] = s;
@@ -900,6 +1032,7 @@ function onAct(pid, d){
     if(id.startsWith('claim:')){ const t = byId(Number(id.slice(6))); if(t && !linked(t)){ t.pid = pid; render(); } }
     return;
   }
+  if(G.phase === 'play' && id.startsWith('r:')) return doReaction(p, id.slice(2));       // le reazioni valgono sempre
   if(G.phase !== 'play' || !LAST[pid] || d.sid !== LAST[pid].sid) return;
   const m = G.m, st = m.stage, role = roleOf(p);
   const num = pre => Number(id.slice(pre.length));
@@ -907,6 +1040,8 @@ function onAct(pid, d){
   if(st === 'pick' && role === 'conc' && id.startsWith('k:')) doPick(num('k:'));
   else if(st === 'bets' && role !== 'conc' && id.startsWith('b:')) doBet(p.id, id.slice(2));
   else if(st === 'call' && role === 'conc' && id.startsWith('k:')) doCall(num('k:'));
+  else if(st === 'call' && role === 'conc' && id === 'jolly') doJolly();
+  else if(['ring','offer'].includes(st) && role === 'pac' && id.startsWith('w:')) doWhisper(p.id, id.slice(2));
   else if(st === 'opening' && id === 'open' && m.calling !== null && m.holders[m.calling] === p.id) doOpen();
   else if(st === 'crowdvote' && id.startsWith('c:')) doCrowd(p.id, num('c:'));
   else if(st === 'ring' && role === 'doc'){
@@ -940,6 +1075,8 @@ if(G.phase === 'play' && G.m){
 if(G.phase === 'play' && (!G.m || G.players.length < 3)) G = fresh();
 render();
 if(G.phase === 'play' && G.m && G.m.stage === 'ring') RING = setInterval(() => tone([[880,.12,'square'],[698,.12,'square'],[880,.12,'square'],[698,.12,'square']]), 1800);
+const fxl = document.createElement('div'); fxl.id = 'fxlayer'; document.body.appendChild(fxl);
+setInterval(tick, 1000);
 Net.start({onAct, onChange:() => { adoptMembers(); render(); }});
 </script>
 </body>
