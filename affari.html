@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Affari Tuoi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{--red:#e8203f;--blue:#1f6bff;--ok2:#2ee6a0}
+  body{background:radial-gradient(1100px 700px at 50% -10%, #7a1b2e, #1b0610 72%) fixed}
+  .wrap{max-width:1300px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .topbar h1{font-size:1.7rem;color:var(--gold)}
+  .topbar .acts{display:flex;gap:8px}
+
+  /* ---------- setup ---------- */
+  .setup{display:grid;gap:18px;margin-top:18px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  @media (max-width:860px){.setup{grid-template-columns:1fr}}
+  .roles-list{list-style:none;padding:0;display:grid;gap:10px}
+  .roles-list li{display:flex;gap:12px;align-items:flex-start;background:#ffffff0f;border-radius:14px;padding:10px 12px}
+  .roles-list .e{font-size:1.9rem;line-height:1}
+  .roles-list b{display:block;font-family:var(--title);font-weight:400;letter-spacing:.04em;color:var(--gold);font-size:1.1rem}
+  .roles-list span{color:#d9defa;font-size:.95rem}
+  .modes{display:flex;gap:10px;margin-top:14px}
+  .seg{flex:1;background:#ffffff0f;border:2px solid #ffffff22;border-radius:14px;padding:10px;font-weight:700;display:flex;flex-direction:column;gap:2px}
+  .seg small{color:var(--mute);font-weight:500}
+  .seg.on{border-color:var(--gold);background:#ffcf3d22}
+  .start-bar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px 0 40px}
+
+  /* ---------- tabellone ---------- */
+  .tv{display:grid;gap:12px;grid-template-columns:96px minmax(0,1fr) 96px;align-items:start}
+  @media (max-width:900px){.tv{grid-template-columns:1fr}.ladder{flex-direction:row !important;flex-wrap:wrap;justify-content:center}.ladder .v{min-width:56px}}
+  .ladder{display:flex;flex-direction:column;gap:6px}
+  .ladder .v{font-family:var(--title);font-size:1.25rem;text-align:center;padding:6px 4px;border-radius:10px;color:#fff;
+             box-shadow:0 3px 0 #0006;transition:opacity .3s}
+  .ladder .v.blue{background:linear-gradient(180deg,#3d86ff,var(--blue))}
+  .ladder .v.red{background:linear-gradient(180deg,#ff4a64,var(--red))}
+  .ladder .v.gone{opacity:.2;text-decoration:line-through}
+  .center{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .roles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .rolecard{display:flex;align-items:center;gap:8px;background:#0006;border:2px solid #ffffff22;border-left:8px solid var(--c);border-radius:14px;padding:6px 12px;font-weight:700}
+  .rolecard small{display:block;color:var(--mute);font-weight:600;font-size:.72rem;letter-spacing:.06em}
+  .rolecard .a{font-size:1.5rem}
+  .stage{background:#00000055;border:3px solid #ffffff22;border-radius:22px;padding:clamp(14px,2.6vw,28px);display:flex;flex-direction:column;
+         align-items:center;gap:14px;text-align:center;min-height:220px;justify-content:center;animation:pop .25s}
+  .badge{font-family:var(--title);letter-spacing:.08em;color:#1a1200;background:var(--gold);padding:4px 16px;border-radius:99px;font-size:1rem}
+  .lead{font-size:1.15rem;color:#e9d9dd;font-weight:600}
+  .big{font-family:var(--title);font-size:clamp(1.7rem,5vw,3.3rem);line-height:1.15;text-shadow:0 3px 0 #0006;letter-spacing:.02em}
+  .huge{font-family:var(--title);font-size:clamp(4rem,14vw,9rem);line-height:1;text-shadow:0 6px 0 #0007}
+  .huge.red{color:#ff4a64}.huge.blue{color:#5aa0ff}
+  .hint{color:var(--mute);font-size:.95rem}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .btn.ko{background:var(--ko);color:#2a0008;box-shadow:0 4px 0 #b3243d}
+  .btn.ok{background:var(--ok2);color:#00230f;box-shadow:0 4px 0 #17a674}
+
+  .pkgs{display:grid;gap:8px;grid-template-columns:repeat(8,minmax(0,1fr))}
+  @media (max-width:900px){.pkgs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .pkg{position:relative;aspect-ratio:1/1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+       background:linear-gradient(160deg,#ffd75e,#e0951a);color:#3a2300;font-family:var(--title);font-size:clamp(1.2rem,2.6vw,2rem);
+       border:3px solid #fff8;box-shadow:0 5px 0 #8a5a00,0 10px 18px #0006;transition:transform .15s,opacity .3s;border-bottom-width:4px}
+  .pkg small{font-family:var(--body);font-size:.95rem;font-weight:700;line-height:1;margin-top:2px}
+  .pkg.btnlike{cursor:pointer}
+  .pkg.btnlike:hover{transform:translateY(-4px) rotate(-2deg)}
+  .pkg.own{background:linear-gradient(160deg,#9affd0,#18b97a);outline:4px solid #fff;color:#00281a}
+  .pkg.calling{animation:wobble .5s infinite;outline:4px solid var(--gold)}
+  .pkg.open{box-shadow:none;transform:scale(.94);color:#fff;border-color:#fff4}
+  .pkg.open.red{background:linear-gradient(160deg,#ff4a64,#a30f26)}
+  .pkg.open.blue{background:linear-gradient(160deg,#4d93ff,#1245b8)}
+  .pkg.open small{opacity:.8}
+  .pkg.sp::after{content:"⭐";position:absolute;top:-8px;right:-6px;font-size:1.3rem;filter:drop-shadow(0 2px 0 #0006);animation:pulse 1.2s infinite}
+  @keyframes wobble{25%{transform:rotate(-4deg) scale(1.05)}75%{transform:rotate(4deg) scale(1.05)}}
+
+  .drum .huge{animation:drum .35s infinite}
+  @keyframes drum{25%{transform:translate(-4px,2px) rotate(-2deg)}75%{transform:translate(4px,-2px) rotate(2deg)}}
+  .ring-emoji{font-size:clamp(4rem,12vw,7rem);animation:ring .5s infinite}
+  @keyframes ring{20%{transform:rotate(-18deg)}40%{transform:rotate(16deg)}60%{transform:rotate(-12deg)}80%{transform:rotate(10deg)}}
+  .offer-amt{font-family:var(--title);font-size:clamp(4.5rem,16vw,10rem);line-height:1;color:var(--gold);text-shadow:0 6px 0 #8a5d00,0 0 40px #ffcf3d66;animation:pop .35s}
+  .ticker{background:linear-gradient(90deg,#ffcf3d,#ff9f1c);color:#2a1700;font-weight:700;border-radius:99px;padding:8px 18px;max-width:100%;animation:pop .3s}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .chip{display:flex;align-items:center;gap:8px;background:#ffffff14;border:3px solid #ffffff22;border-left:8px solid var(--c);
+        border-radius:14px;padding:6px 12px;font-weight:700;font-size:1rem}
+  .chip span{font-size:1.3rem}
+  .chip.on{background:var(--ok2);color:#00230f;border-color:#fff;border-left-color:var(--c)}
+  button.chip:hover{transform:translateY(-2px)}
+  .votebar{width:100%;max-width:560px;display:grid;gap:6px}
+  .votebar .row{display:grid;grid-template-columns:90px 1fr 30px;gap:8px;align-items:center;font-weight:700}
+  .votebar .track{height:18px;background:#ffffff1a;border-radius:99px;overflow:hidden}
+  .votebar .fill{height:100%;transition:width .4s}
+  .votebar .fill.y{background:var(--ok2)}.votebar .fill.n{background:var(--ko)}
+  .cands{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .cands .pkg{width:90px}
+
+  .score{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-top:14px}
+  .pl{background:#0007;border:3px solid transparent;border-top:6px solid var(--c);border-radius:14px;padding:8px 10px}
+  .pl .who{display:flex;gap:6px;align-items:center;font-weight:700;font-size:.95rem}
+  .pl .who .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pl .pts{font-family:var(--title);font-size:1.9rem;line-height:1.1;color:var(--ok2)}
+  .pl .pts.neg{color:var(--ko)}
+  .pl .role{font-size:.72rem;color:var(--mute);font-weight:700;letter-spacing:.05em}
+
+  .result{width:100%;display:grid;gap:10px;max-width:640px}
+  .gain{display:flex;align-items:center;gap:10px;background:#ffffff12;border-left:8px solid var(--c);border-radius:12px;padding:8px 12px;font-weight:700;text-align:left}
+  .gain .nm{flex:1}.gain .d{font-family:var(--title);font-size:1.4rem;color:var(--ok2)}.gain .d.neg{color:var(--ko)}
+  .timeline{list-style:none;padding:0;display:grid;gap:6px;width:100%;max-width:640px;text-align:left}
+  .timeline li{background:#ffffff0f;border-radius:10px;padding:6px 12px;opacity:0;animation:slide .4s forwards;font-weight:600}
+  .timeline li.hl{background:linear-gradient(90deg,#ffcf3d33,transparent);border-left:5px solid var(--gold)}
+  @keyframes slide{from{transform:translateX(-14px)}to{opacity:1;transform:none}}
+  .end h1{font-size:clamp(2.2rem,7vw,4.5rem);color:var(--gold);text-shadow:0 5px 0 #8a5d00}
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;width:100%;max-width:640px}
+  .step{flex:1;border-radius:16px 16px 0 0;padding:14px 8px;background:linear-gradient(180deg,var(--red),#6b0f1e);border-top:6px solid var(--c)}
+  .step .av{font-size:clamp(2rem,6vw,3.4rem)}
+  .step .pts{font-family:var(--title);font-size:1.8rem;color:var(--gold)}
+  .step.p1{min-height:210px}.step.p2{min-height:160px}.step.p3{min-height:115px}
+  .awards{display:grid;gap:8px;width:100%;max-width:640px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .award{background:#ffffff12;border-radius:14px;padding:10px 14px;text-align:left;display:flex;gap:10px;align-items:center}
+  .award .e{font-size:2rem}
+  .award b{display:block;color:var(--gold);font-family:var(--title);font-weight:400;letter-spacing:.04em}
+  .award span{font-size:.92rem;color:#e9d9dd}
+  details.ctl{width:100%;background:#0004;border-radius:14px;padding:8px 12px;text-align:left}
+  details.ctl summary{cursor:pointer;color:var(--mute);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script src="qrcode.js"></script>
+<script src="shared.js"></script>
+<script src="net.js"></script>
+<script>
+const { esc, shuffle, tone, burst } = Party;
+const $ = s => document.querySelector(s);
+const KEY = 'affari-v1';
+
+/* =====================================================================
+   CONTENUTI
+   ===================================================================== */
+const VALUES = [0,1,2,3,5,7,10,15,20,25,30,40,50,75,100,200];
+const isRed = v => v >= 20;                       // rosso = premio grosso, blu = premio piccolo
+const PRIZES = [
+  [0,'Lavi i piatti per tutti 🧽'],[1,'Offri una caramella a tutti 🍬'],[2,'Fai un complimento a ciascuno 💬'],
+  [3,'Imiti un animale per 10 secondi 🐒'],[5,'Racconti la tua figuraccia più grande 🙈'],[7,'Paghi il giro 🍻'],
+  [10,'Canti il ritornello di una canzone 🎤'],[15,'Scegli la musica per mezz\'ora 🎵'],
+  [20,'Scegli il film 🎬'],[25,'Un amico ti serve da bere 🍹'],[30,'Esentato dai piatti 🧼'],
+  [40,'Esentato dalla spesa 🛒'],[50,'Massaggio di 2 minuti 💆'],[75,'Assegni un pegno a chi vuoi 😈'],
+  [100,'Re della serata: tutti ti obbediscono 👑'],[200,'JACKPOT! Servito e riverito per una settimana 🏆']
+];
+const prizeFor = amt => { let t = PRIZES[0]; for(const p of PRIZES) if(p[0] <= amt) t = p; return t[1]; };
+const ROUNDS = [4,3,3,2,1,1];                    // pacchi da aprire a ogni giro (14 su 15)
+const COEF   = [.30,.42,.55,.68,.80,.92];        // quanto sale l'offerta "equa"
+const MSGS = ['Il Dottore ti saluta… 👋','Non fidarti del tuo pacco! 😈','Quest\'offerta scade tra 10 secondi ⏳',
+              'Io al posto tuo accetterei… 😏','Sento puzza di jackpot 🏆','Hai le mani che tremano? 🥶'];
+const SPECIALS = {
+  swap:   {em:'🔄', name:'Scambio forzato', text:'Il tuo pacco viene scambiato con un altro a caso!'},
+  crowd:  {em:'🗳️', name:'Il pubblico decide', text:'Il pubblico sceglie il prossimo pacco da aprire!'},
+  double: {em:'💥', name:'Offerta raddoppiata', text:'L\'offerta del Dottore vale il DOPPIO!'}
+};
+
+/* =====================================================================
+   STATO
+   ===================================================================== */
+let G = load() || fresh();
+function fresh(){ return {phase:'setup', players:[], mode:'all', idx:0, total:1, m:null, muted:false}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(G)); }catch(e){} }
+const mkPlayer = (p,i) => ({id:i+1, name:p.name, av:p.av, color:p.color, pid:p.pid || null, score:0,
+                            st:{docGain:0, bets:0, votes:0, rejected:0, redHeld:0}});
+const byId = id => G.players.find(p => p.id === id);
+const linked = p => !!(p && p.pid && Net.online(p.pid));
+const M = () => G.m;
+const audience = () => G.players.filter(p => p.id !== G.m.conc);                    // scommettono
+const voters   = () => G.players.filter(p => p.id !== G.m.conc && p.id !== G.m.doc); // votano accetta/rifiuta
+const others = () => { const m = G.m; return m.vals.map((_,i) => i).filter(i => !m.opened[i] && i !== m.own); };
+const remainingVals = () => G.m.vals.filter((_,i) => !G.m.opened[i]);
+const isGone = v => G.m.vals.some((x,i) => x === v && G.m.opened[i]);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const roleOf = p => p.id === G.m.conc ? 'conc' : p.id === G.m.doc ? 'doc' : 'pac';
+const pkgsOf = p => G.m.vals.map((_,i) => i).filter(i => G.m.holders[i] === p.id && !G.m.opened[i] && i !== G.m.own);
+
+let TM = null, RING = null;
+function clearTimers(){ clearTimeout(TM); TM = null; clearInterval(RING); RING = null; }
+function go(stage){ clearTimers(); G.m.stage = stage; render(); }
+const curOffer = () => G.m.offers[G.m.offers.length - 1];
+
+/* =====================================================================
+   FLUSSO DELLA PARTITA
+   ===================================================================== */
+function startGame(){
+  if(G.players.length < 3) return;
+  G.players.forEach(p => { p.score = 0; p.st = {docGain:0, bets:0, votes:0, rejected:0, redHeld:0}; });
+  G.idx = 0; G.total = G.mode === 'one' ? 1 : G.players.length;
+  startMatch();
+}
+function startMatch(){
+  const ids = G.players.map(p => p.id), n = ids.length;
+  const conc = ids[G.idx % n], doc = ids[(G.idx + 1) % n];       // i ruoli ruotano a ogni partita
+  const pac = ids.filter(i => i !== conc && i !== doc);
+  const vals = shuffle(VALUES);                                   // valori nascosti: li conosce solo l'app
+  G.m = {conc, doc, vals, holders:vals.map((_,i) => pac[i % pac.length]), own:null, opened:Array(16).fill(false),
+         specials:{}, spDone:{}, round:0, quota:0, calling:null, stage:'roles', draft:null, offers:[], dbl:false,
+         bets:{}, log:[], ticker:null, crowd:[], crowdVotes:{}, ownAtBet:null, end:null, result:null, msg:''};
+  G.phase = 'play';
+  clearTimers(); render();
+  tone([[392,.12],[523,.12],[659,.12],[784,.25]]);
+}
+const roleOk = () => go('pick');
+
+function doPick(i){
+  const m = M(); if(m.stage !== 'pick' || m.own !== null) return;
+  m.own = i; m.ownAtBet = m.vals[i];
+  const sp = shuffle(m.vals.map((_,k) => k).filter(k => k !== i)).slice(0,3);   // 3 pacchi speciali ⭐
+  ['swap','crowd','double'].forEach((k,j) => { m.specials[sp[j]] = k; });
+  m.log.push({t:'pick', pkg:i}); m.bets = {};
+  tone([[523,.1],[784,.2]]);
+  go('bets');
+}
+function doBet(pid, color){
+  const m = M(); if(m.stage !== 'bets' || pid === m.conc) return;
+  m.bets[pid] = color;
+  if(audience().every(p => linked(p) && m.bets[p.id])) return startRound();
+  render();
+}
+function startRound(){ const m = M(); m.round = 0; m.quota = Math.min(ROUNDS[0], others().length - 1); go('call'); }
+
+function doCall(i){
+  const m = M(); if(m.stage !== 'call' || m.opened[i] || i === m.own) return;
+  m.calling = i; tone([[440,.1],[554,.15]]); go('opening');
+}
+function doOpen(){
+  const m = M(); if(m.stage !== 'opening') return;
+  go('suspense');
+  let k = 0; RING = setInterval(() => { tone([[k++ % 2 ? 110 : 98, .18, 'sawtooth']]); }, 220);
+  TM = setTimeout(reveal, 3200);
+}
+function reveal(){
+  const m = M(), i = m.calling, v = m.vals[i];
+  clearTimers();
+  m.opened[i] = true; m.log.push({t:'open', pkg:i, v, by:m.holders[i]});
+  if(isRed(v)){ const h = byId(m.holders[i]); if(h) h.st.redHeld++; }
+  m.stage = 'reveal'; render();
+  if(isRed(v)){ tone([[330,.18,'sawtooth'],[247,.2,'sawtooth'],[196,.45,'sawtooth']]); burst(['😱','💥','🔴'], 18); }
+  else{ tone([[523,.1],[659,.1],[784,.1],[1047,.3]]); burst(['🎉','✨','🔵'], 18); }
+  TM = setTimeout(afterReveal, 4200);
+}
+function afterReveal(){
+  const m = M(); if(m.stage !== 'reveal') return;
+  clearTimers();
+  m.quota--;
+  const sp = m.specials[m.calling];
+  if(sp && !m.spDone[m.calling]){ m.spDone[m.calling] = true; return runSpecial(sp); }
+  advance();
+}
+function advance(){
+  const m = M();
+  if(m.quota > 0 && others().length > 1) go('call'); else toRing();
+}
+function runSpecial(kind){
+  const m = M();
+  if(kind === 'swap'){
+    const c = shuffle(others())[0];
+    if(c === undefined) return advance();
+    m.log.push({t:'swap', from:m.own, to:c}); m.own = c;
+    m.msg = `Il tuo pacco ora è il n.${c + 1}`;
+    tone([[784,.1],[587,.1],[784,.1],[587,.2]]);
+    go('special'); TM = setTimeout(specialDone, 4200);
+  }else if(kind === 'double'){
+    m.dbl = true; m.log.push({t:'double'});
+    m.msg = 'Il Dottore dovrà pagare il doppio… o abbassare l\'offerta!';
+    tone([[523,.1],[659,.1],[784,.1],[1047,.3]]);
+    go('special'); TM = setTimeout(specialDone, 4200);
+  }else{   // crowd
+    if(others().length < 2) return advance();
+    m.crowd = shuffle(others()).slice(0,3); m.crowdVotes = {};
+    m.log.push({t:'crowd'});
+    go('crowdvote');
+  }
+}
+function specialDone(){ if(M().stage === 'special') advance(); }
+function doCrowd(pid, idx){
+  const m = M(); if(m.stage !== 'crowdvote' || pid === m.conc || !m.crowd.includes(idx)) return;
+  m.crowdVotes[pid] = idx;
+  if(audience().every(p => linked(p) && m.crowdVotes[p.id] !== undefined)) return closeCrowd();
+  render();
+}
+function closeCrowd(){
+  const m = M(); if(m.stage !== 'crowdvote') return;
+  const tally = {}; Object.values(m.crowdVotes).forEach(i => { tally[i] = (tally[i] || 0) + 1; });
+  const max = Math.max(0, ...Object.values(tally));
+  const top = max ? Object.keys(tally).filter(k => tally[k] === max).map(Number) : m.crowd;
+  m.calling = shuffle(top)[0];
+  go('opening');
+}
+
+/* ---- il Dottore ---- */
+function fairOffer(){
+  const r = remainingVals(), avg = r.reduce((a,b) => a + b, 0) / r.length;
+  return Math.round(avg * COEF[Math.min(M().round, COEF.length - 1)]);
+}
+function toRing(){
+  const m = M();
+  m.draft = {amount:fairOffer(), fair:fairOffer(), cambio:false};
+  go('ring');
+  RING = setInterval(() => tone([[880,.12,'square'],[698,.12,'square'],[880,.12,'square'],[698,.12,'square']]), 1800);
+}
+function docAdj(op){
+  const m = M(), d = m.draft; if(!d || m.stage !== 'ring') return;
+  const max = Math.max(...remainingVals()) * 1.2 + 5;
+  const ops = {m5:a => a - 5, m1:a => a - 1, p1:a => a + 1, p5:a => a + 5,
+               x50:a => a * .5, x75:a => a * .75, x125:a => a * 1.25, x150:a => a * 1.5, fair:() => d.fair};
+  if(ops[op]) d.amount = clamp(Math.round(ops[op](d.amount)), 0, Math.round(max));
+  render();
+}
+function docCambio(){ const d = M().draft; if(d && M().stage === 'ring'){ d.cambio = !d.cambio; render(); } }
+function docMsg(text){
+  const m = M(), t = String(text || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 70);
+  if(!t) return;
+  m.ticker = {text:t, t:Date.now()};
+  tone([[988,.1],[1319,.2]]); render();
+}
+function sendOffer(){
+  const m = M(), d = m.draft; if(m.stage !== 'ring' || !d) return;
+  clearTimers();
+  const amount = d.amount * (m.dbl ? 2 : 1);
+  const cambio = d.cambio && others().length ? shuffle(others())[0] : null;
+  m.offers.push({amount, base:d.amount, dbl:m.dbl, cambio, votes:{}, round:m.round});
+  m.log.push({t:'offer', amount, dbl:m.dbl});
+  m.dbl = false;
+  tone([[659,.12],[784,.12],[988,.12],[1319,.4]]); burst(['📞','💰'], 10);
+  go('offer');
+}
+function doVote(pid, v){
+  const m = M(); if(m.stage !== 'offer') return;
+  if(pid === m.conc || pid === m.doc) return;
+  curOffer().votes[pid] = v; render();
+}
+function doDecision(kind){
+  const m = M(); if(m.stage !== 'offer') return;
+  const o = curOffer();
+  if(kind === 'cambio'){
+    if(o.cambio === null) return;
+    m.log.push({t:'cambio', from:m.own, to:o.cambio}); m.own = o.cambio; o.cambio = null;
+    tone([[784,.1],[587,.1],[784,.2]]); render(); return;
+  }
+  if(kind === 'accept'){ m.log.push({t:'deal', amount:o.amount}); return finishMatch('deal', o.amount); }
+  m.log.push({t:'reject', amount:o.amount}); byId(m.conc).st.rejected++;
+  if(others().length <= 1) return go('switch');
+  m.round++; m.quota = Math.min(ROUNDS[Math.min(m.round, ROUNDS.length - 1)], others().length - 1);
+  tone([[330,.15],[262,.3]]);
+  go('call');
+}
+function doSwitch(swap){
+  const m = M(); if(m.stage !== 'switch') return;
+  if(swap){ const last = others()[0]; m.log.push({t:'switch', from:m.own, to:last}); m.own = last; }
+  else m.log.push({t:'keep'});
+  finishMatch(swap ? 'swap' : 'keep', null);
+}
+function finishMatch(kind, amount){
+  const m = M();
+  m.end = {kind, amount};
+  go('finalreveal');
+  let k = 0; RING = setInterval(() => { tone([[k++ % 2 ? 130 : 110, .2, 'sawtooth']]); }, 240);
+  TM = setTimeout(showResult, 4200);
+}
+
+function showResult(){
+  const m = M(), e = m.end, v = m.vals[m.own];
+  clearTimers();
+  const conc = byId(m.conc), doc = byId(m.doc);
+  const win = e.kind === 'deal' ? e.amount : v;
+  const gains = {}; const add = (id, n) => { gains[id] = (gains[id] || 0) + n; };
+  add(conc.id, win);
+  if(e.kind === 'deal'){ const g = clamp(v - e.amount, -20, 20); add(doc.id, g); doc.st.docGain += g; }
+  m.offers.forEach(o => Object.entries(o.votes).forEach(([pid, vt]) => {
+    if((vt === 'y') === (o.amount >= v)){ add(Number(pid), 1); const p = byId(Number(pid)); if(p) p.st.votes++; }
+  }));
+  const redInit = isRed(m.ownAtBet);
+  Object.entries(m.bets).forEach(([pid, c]) => {
+    if((c === 'red') === redInit){ add(Number(pid), 3); const p = byId(Number(pid)); if(p) p.st.bets++; }
+  });
+  Object.entries(gains).forEach(([id, n]) => { const p = byId(Number(id)); if(p) p.score += n; });
+  m.result = {win, v, kind:e.kind, amount:e.amount, gains, prize:prizeFor(win), regret:e.kind === 'deal' ? v - e.amount : 0};
+  m.stage = 'end'; render();
+  if(win >= 20){ tone([[523,.12],[659,.12],[784,.12],[1047,.12],[784,.12],[1047,.5]]); burst(['🏆','🎉','🥳','💰'], 50); }
+  else{ tone([[392,.2],[330,.2],[262,.4]]); burst(['🧽','😅'], 14); }
+}
+function nextMatch(){
+  G.idx++;
+  if(G.idx >= G.total){ G.phase = 'final'; render(); tone([[523,.15],[659,.15],[784,.15],[1047,.15],[784,.15],[1047,.15],[1319,.5]]); burst(['🎉','🏆','⭐','🎊','🥳'], 70); }
+  else startMatch();
+}
+
+/* =====================================================================
+   SETUP / VARIE
+   ===================================================================== */
+function addPlayer(e){
+  e.preventDefault();
+  const inp = $('#pname'), name = inp.value.trim();
+  if(!name) return;
+  G.players.push(mkPlayer({name, av:suggestEmoji(name, G.players.map(p => p.av)), color:COLORS[G.players.length % COLORS.length]}, G.players.length));
+  inp.value = ''; render(); $('#pname').focus();
+}
+function previewAv(){ const v = $('#pname').value.trim(); $('#pprev').textContent = v ? suggestEmoji(v, G.players.map(p => p.av)) : '🙂'; }
+function removePlayer(id){ G.players = G.players.filter(p => p.id !== id).map(mkPlayer); render(); }
+function cycleAvatar(id){
+  const p = byId(id), taken = G.players.filter(x => x.id !== id).map(x => x.av);
+  const all = [...new Set([...Object.values(NAME_EMOJI), ...POOL])].filter(e => !taken.includes(e));
+  p.av = all[(all.indexOf(p.av) + 1) % all.length]; render();
+}
+function setMode(m){ G.mode = m; render(); }
+function toggleMute(){ G.muted = !G.muted; Party.muted = G.muted; render(); }
+function restart(){
+  if(!confirm('Tornare alla schermata iniziale? La partita in corso andrà persa.')) return;
+  clearTimers(); G.phase = 'setup'; G.m = null; render();
+}
+
+/* =====================================================================
+   VISTE (schermo principale)
+   ===================================================================== */
+function render(){
+  const app = $('#app');
+  const typed = $('#pname') ? $('#pname').value : '';
+  if(G.phase === 'setup'){ saveRoster(G.players); app.innerHTML = viewSetup(); if(typed){ $('#pname').value = typed; previewAv(); } }
+  else if(G.phase === 'final') app.innerHTML = viewFinal();
+  else app.innerHTML = viewPlay();
+  save();
+  syncScreens();
+}
+
+function chipRow(list, sel, fn){
+  return `<div class="chips">${list.map(p => `<button class="chip ${sel.includes(p.id) ? 'on' : ''}" style="--c:${p.color}" onclick="${fn}(${p.id})"><span>${p.av}</span>${esc(p.name)}</button>`).join('')}</div>`;
+}
+
+function viewSetup(){
+  const n = G.players.length;
+  return `
+  <header class="hero">
+    <a class="btn ghost small" href="index.html" style="float:left">🏠 Home</a>
+    <button class="btn ghost small" style="float:right" onclick="Net.openPanel()">📱 Telefoni${Net.onlineCount ? ' (' + Net.onlineCount + ')' : ''}</button>
+    <h1>AFFARI TUOI</h1>
+    <p>Pacchi, Dottore, offerte e nervi saldi: chi avrà il pacco giusto? 📦📞</p>
+  </header>
+  <div class="setup">
+    <section class="panel">
+      <h2>👥 Giocatori</h2>
+      <form class="add-row" onsubmit="addPlayer(event)">
+        <span class="prev" id="pprev">🙂</span>
+        <input id="pname" placeholder="Nome del giocatore" maxlength="16" autocomplete="off" oninput="previewAv()">
+        <button class="btn small" type="submit">Aggiungi</button>
+      </form>
+      <ul class="players">
+        ${G.players.map(p => `
+          <li style="--c:${p.color}"><button class="av" title="Cambia emoji" onclick="cycleAvatar(${p.id})">${p.av}</button>
+          <span class="nm">${esc(p.name)}</span>${linked(p) ? '<span title="Telefono collegato">📱</span>' : ''}
+          <button class="x" title="Rimuovi" onclick="removePlayer(${p.id})">✕</button></li>`).join('')}
+      </ul>
+      <p class="hint">${n < 3 ? 'Servono almeno 3 giocatori: Concorrente, Dottore e almeno un Pacchista. Meglio se con il telefono!' : 'Si gioca meglio con un telefono a testa: i pacchi si aprono dai telefoni!'}</p>
+      <div class="modes">
+        <button class="seg ${G.mode === 'all' ? 'on' : ''}" onclick="setMode('all')">🔁 Una a testa<small>tutti fanno il Concorrente</small></button>
+        <button class="seg ${G.mode === 'one' ? 'on' : ''}" onclick="setMode('one')">⚡ Una partita<small>veloce</small></button>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>🎭 I ruoli (a rotazione)</h2>
+      <ul class="roles-list">
+        <li><span class="e">🎯</span><div><b>IL CONCORRENTE</b><span>Sceglie il suo pacco, poi quali aprire. Accetta o rifiuta le offerte e il cambio.</span></div></li>
+        <li><span class="e">📞</span><div><b>IL DOTTORE</b><span>È la banca: parte dall'offerta "equa" e la alza, la abbassa o propone il cambio. Può mandare messaggi di pressione!</span></div></li>
+        <li><span class="e">📦</span><div><b>I PACCHISTI</b><span>Tengono i pacchi: quando tocca al loro lo aprono dal telefono, tra suspense e fischi.</span></div></li>
+        <li><span class="e">🗳️</span><div><b>IL PUBBLICO</b><span>Tutti scommettono sul colore del pacco e votano Accetta/Rifiuta in tempo reale. Così vincono punti anche i non giocanti!</span></div></li>
+        <li><span class="e">⭐</span><div><b>PACCHI SPECIALI</b><span>Scambio forzato, il pubblico decide, offerta raddoppiata… sono nascosti tra i pacchi!</span></div></li>
+      </ul>
+    </section>
+  </div>
+  <div class="start-bar"><button class="btn big" ${n < 3 ? 'disabled' : ''} onclick="startGame()">🎁 Apri il gioco</button></div>`;
+}
+
+function topbar(){
+  return `<div class="topbar">
+    <h1>AFFARI TUOI</h1>
+    <div class="acts">
+      <a class="btn ghost small" href="index.html">🏠</a>
+      <button class="btn ghost small" onclick="Net.openPanel()">📱 ${Net.onlineCount || ''}</button>
+      <button class="btn ghost small" onclick="toggleMute()">${G.muted ? '🔇' : '🔊'}</button>
+      <button class="btn ghost small" onclick="restart()">↺</button>
+    </div></div>`;
+}
+
+const ladder = side => {
+  const list = VALUES.filter(v => side === 'red' ? isRed(v) : !isRed(v));
+  return `<div class="ladder">${list.map(v => `<div class="v ${side} ${isGone(v) ? 'gone' : ''}">${v}</div>`).join('')}</div>`;
+};
+
+function rolesStrip(){
+  const m = M(), c = byId(m.conc), d = byId(m.doc);
+  const pac = G.players.filter(p => p.id !== m.conc && p.id !== m.doc);
+  const card = (p, role, em) => `<div class="rolecard" style="--c:${p.color}"><span class="a">${p.av}</span><div><small>${em} ${role}</small>${esc(p.name)}</div></div>`;
+  return `<div class="roles">${card(c, 'CONCORRENTE', '🎯')}${card(d, 'DOTTORE', '📞')}
+    ${pac.length ? `<div class="rolecard" style="--c:#9aa6e8"><span class="a">📦</span><div><small>PACCHISTI</small>${pac.map(p => p.av + ' ' + esc(p.name)).join(', ')}</div></div>` : ''}</div>`;
+}
+
+function pkgGrid(clickable){
+  const m = M();
+  return `<div class="pkgs">${m.vals.map((v,i) => {
+    const h = byId(m.holders[i]), open = m.opened[i], own = m.own === i;
+    const can = clickable && !open && !own;
+    return `<${can ? 'button' : 'div'} class="pkg ${open ? 'open ' + (isRed(v) ? 'red' : 'blue') : ''} ${own ? 'own' : ''} ${m.calling === i && ['opening','suspense','reveal'].includes(m.stage) ? 'calling' : ''}
+      ${!open && m.specials[i] && m.own !== null ? 'sp' : ''} ${can ? 'btnlike' : ''}" ${can ? `onclick="${clickable}(${i})"` : ''}>
+      ${open ? v : (own ? 'TUO' : i + 1)}<small>${open ? '#' + (i + 1) : own ? '#' + (i + 1) : (h ? h.av : '')}</small></${can ? 'button' : 'div'}>`;
+  }).join('')}</div>`;
+}
+
+const hostCtl = (cond, html) => cond ? html : '';
+function manualRow(kind){      // voti per chi non ha il telefono
+  const m = M();
+  const list = (kind === 'vote' ? voters() : audience()).filter(p => !linked(p));
+  if(!list.length) return '';
+  return `<details class="ctl" open><summary>🖐️ Senza telefono: vota da qui</summary>
+    ${list.map(p => `<div class="chips" style="margin-top:6px"><span class="chip" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)}</span>
+      ${kind === 'vote'
+        ? `<button class="btn small ok" onclick="doVote(${p.id},'y')">✅ Accetta</button><button class="btn small ko" onclick="doVote(${p.id},'n')">❌ Rifiuta</button>`
+        : kind === 'bet'
+        ? `<button class="btn small" style="background:var(--blue);color:#fff" onclick="doBet(${p.id},'blue')">🔵 Blu</button><button class="btn small ko" onclick="doBet(${p.id},'red')">🔴 Rosso</button>`
+        : M().crowd.map(i => `<button class="btn small" onclick="doCrowd(${p.id},${i})">${i + 1}</button>`).join('')}
+    </div>`).join('')}</details>`;
+}
+
+function composerHTML(){
+  const m = M(), d = m.draft;
+  const eff = d.amount * (m.dbl ? 2 : 1);
+  const b = (op, label) => `<button class="btn small ghost" onclick="docAdj('${op}')">${label}</button>`;
+  return `<div class="stage" style="min-height:0;background:#0003">
+    <div class="lead">La tua offerta${m.dbl ? ' — ⚠️ RADDOPPIATA: vale ×2!' : ''}</div>
+    <div class="offer-amt" style="font-size:4rem">${eff}</div>
+    <div class="actions">${b('m5','−5')}${b('m1','−1')}${b('p1','+1')}${b('p5','+5')}</div>
+    <div class="actions">${b('x50','−50%')}${b('x75','−25%')}${b('fair','Equa (' + d.fair + ')')}${b('x125','+25%')}${b('x150','+50%')}</div>
+    <div class="actions"><button class="btn small ${d.cambio ? '' : 'ghost'}" onclick="docCambio()">🔄 Proponi cambio ${d.cambio ? '✔' : ''}</button></div>
+    <div class="actions">${MSGS.slice(0,3).map((t,i) => `<button class="btn small ghost" onclick="docMsg(MSGS[${i}])">${esc(t)}</button>`).join('')}</div>
+    <button class="btn big ok" onclick="sendOffer()">📞 Invia offerta</button></div>`;
+}
+
+function tally(){
+  const o = curOffer(), v = voters();
+  const y = v.filter(p => o.votes[p.id] === 'y').length, n = v.filter(p => o.votes[p.id] === 'n').length;
+  const tot = Math.max(1, v.length);
+  return `<div class="votebar">
+    <div class="row"><span>✅ Accetta</span><div class="track"><div class="fill y" style="width:${y / tot * 100}%"></div></div><span>${y}</span></div>
+    <div class="row"><span>❌ Rifiuta</span><div class="track"><div class="fill n" style="width:${n / tot * 100}%"></div></div><span>${n}</span></div></div>`;
+}
+
+function stageHTML(){
+  const m = M(), conc = byId(m.conc), doc = byId(m.doc);
+  const holder = m.calling !== null ? byId(m.holders[m.calling]) : null;
+  const ticker = m.ticker ? `<div class="ticker">📞 Il Dottore: “${esc(m.ticker.text)}”</div>` : '';
+  const needConc = !linked(conc), needDoc = !linked(doc);
+
+  switch(m.stage){
+    case 'roles': return `
+      <span class="badge">PARTITA ${G.idx + 1} DI ${G.total}</span>
+      <div class="big">${conc.av} ${esc(conc.name)} è il Concorrente!</div>
+      <div class="lead">${doc.av} ${esc(doc.name)} è il Dottore · gli altri tengono i pacchi e fanno il pubblico</div>
+      <p class="hint">I 16 valori sono nascosti: li conosce solo il gioco. Blu = premi piccoli, Rosso = premi grossi.</p>
+      <button class="btn big" onclick="roleOk()">Si comincia ▶</button>`;
+    case 'pick': return `
+      <div class="lead">🎯 ${conc.av} ${esc(conc.name)}, scegli il TUO pacco!</div>
+      <div class="big">Quale numero?</div>
+      <p class="hint">${needConc ? 'Tocca un pacco qui sotto.' : 'La scelta arriva dal telefono.'}</p>`;
+    case 'bets': {
+      const aud = audience();
+      return `
+      <span class="badge">SCOMMESSE DEL PUBBLICO</span>
+      <div class="big">Il pacco di ${esc(conc.name)} è BLU o ROSSO?</div>
+      <div class="chips">${aud.map(p => `<span class="chip ${m.bets[p.id] ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${m.bets[p.id] ? '✔' : '…'}</span>`).join('')}</div>
+      <p class="hint">Indovinare vale +3 punti. Blu = meno di 20 · Rosso = 20 o più.</p>
+      ${manualRow('bet')}
+      <button class="btn" onclick="startRound()">Avanti ▶</button>`;
+    }
+    case 'call': return `
+      <div class="lead">Giro ${m.round + 1} · da aprire: <b>${m.quota}</b></div>
+      <div class="big">📦 ${esc(conc.name)}, quale pacco apri?</div>
+      ${ticker}
+      <p class="hint">${needConc ? 'Tocca un pacco qui sotto.' : 'Il Concorrente sceglie dal telefono.'}</p>`;
+    case 'opening': return `
+      <div class="lead">Il pacco n.${m.calling + 1} è nelle mani di</div>
+      <div class="big">${holder ? holder.av + ' ' + esc(holder.name) : ''}</div>
+      <p class="hint">${linked(holder) ? 'Aprilo dal tuo telefono quando sei pronto…' : 'Pacchista senza telefono: premi tu!'}</p>
+      ${!linked(holder) ? '<button class="btn big" onclick="doOpen()">🎁 Apri il pacco</button>' : ''}`;
+    case 'suspense': return `<div class="drum"><div class="lead">${holder ? esc(holder.name) : ''} apre il pacco n.${m.calling + 1}…</div><div class="huge">???</div></div>`;
+    case 'reveal': {
+      const v = m.vals[m.calling];
+      return `
+      <div class="lead">Il pacco n.${m.calling + 1} conteneva</div>
+      <div class="huge ${isRed(v) ? 'red' : 'blue'}">${v}</div>
+      <div class="big">${isRed(v) ? '🔴 Ahi, un premio grosso se n\'è andato!' : '🔵 Meno male, era uno piccolo!'}</div>
+      <button class="btn" onclick="afterReveal()">Continua ▶</button>`;
+    }
+    case 'special': {
+      const sp = SPECIALS[m.specials[m.calling]];
+      return `<div class="huge">${sp.em}</div><div class="big">PACCO SPECIALE: ${sp.name}!</div>
+        <div class="lead">${sp.text}</div><div class="lead">${esc(m.msg)}</div>
+        <button class="btn" onclick="specialDone()">Continua ▶</button>`;
+    }
+    case 'crowdvote': return `
+      <div class="huge">🗳️</div><div class="big">Il pubblico decide!</div>
+      <div class="lead">Scegliete quale pacco aprire adesso:</div>
+      <div class="cands">${m.crowd.map(i => `<div class="pkg">${i + 1}<small>${(byId(m.holders[i]) || {av:''}).av}</small></div>`).join('')}</div>
+      <div class="chips">${audience().map(p => `<span class="chip ${m.crowdVotes[p.id] !== undefined ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${m.crowdVotes[p.id] !== undefined ? '✔' : '…'}</span>`).join('')}</div>
+      ${manualRow('crowd')}
+      <button class="btn" onclick="closeCrowd()">Chiudi la votazione ▶</button>`;
+    case 'ring': return `
+      <div class="ring-emoji">📞</div>
+      <div class="big">Squilla il telefono del Dottore!</div>
+      <div class="lead">${doc.av} ${esc(doc.name)} sta preparando un'offerta per ${esc(conc.name)}…</div>
+      ${ticker}
+      ${needDoc ? composerHTML() : '<p class="hint">Il Dottore usa il suo telefono.</p>'}`;
+    case 'offer': {
+      const o = curOffer();
+      return `
+      <div class="lead">📞 Offerta del Dottore${o.dbl ? ' <b>(×2 per il pacco speciale!)</b>' : ''}</div>
+      <div class="offer-amt">${o.amount}</div>
+      ${ticker}
+      ${o.cambio !== null ? `<div class="lead">🔄 In più propone il cambio con il pacco n.${o.cambio + 1}!</div>` : ''}
+      <div class="lead">Il pubblico dice…</div>
+      ${tally()}
+      ${manualRow('vote')}
+      ${needConc ? `<div class="actions">
+        <button class="btn big ok" onclick="doDecision('accept')">✅ Accetto</button>
+        <button class="btn big ko" onclick="doDecision('reject')">❌ Rifiuto</button>
+        ${o.cambio !== null ? `<button class="btn big" onclick="doDecision('cambio')">🔄 Cambio</button>` : ''}</div>`
+        : `<p class="hint">${esc(conc.name)} decide dal telefono…</p>`}`;
+    }
+    case 'switch': return `
+      <div class="huge">🤔</div><div class="big">Ultimo bivio: tieni il tuo pacco o lo cambi?</div>
+      <div class="lead">Restano il n.${m.own + 1} (tuo) e il n.${others()[0] + 1}.</div>
+      ${needConc ? `<div class="actions"><button class="btn big ok" onclick="doSwitch(false)">✊ Tengo il mio</button>
+        <button class="btn big" onclick="doSwitch(true)">🔄 Cambio</button></div>` : `<p class="hint">${esc(conc.name)} decide dal telefono…</p>`}`;
+    case 'finalreveal': return `<div class="drum"><div class="lead">Il pacco n.${m.own + 1} di ${esc(conc.name)} contiene…</div><div class="huge">???</div></div>`;
+    case 'end': return endHTML();
+  }
+  return '';
+}
+
+function replayLines(){
+  const m = M(), lines = [];
+  const pk = i => `n.${i + 1}`;
+  const biggest = Math.max(0, ...m.log.filter(l => l.t === 'open').map(l => l.v));
+  m.log.forEach(l => {
+    const h = l.by ? byId(l.by) : null;
+    if(l.t === 'pick') lines.push([`🎯 ${esc(byId(m.conc).name)} sceglie il suo pacco ${pk(l.pkg)}`, false]);
+    else if(l.t === 'open') lines.push([`📦 Pacco ${pk(l.pkg)} di ${h ? esc(h.name) : '?'} → ${isRed(l.v) ? '🔴' : '🔵'} <b>${l.v}</b>${l.v === biggest && l.v >= 20 ? ' 💥 il disastro!' : ''}`, l.v === biggest && l.v >= 20]);
+    else if(l.t === 'swap') lines.push([`🔄 Scambio forzato: ${pk(l.from)} → ${pk(l.to)}`, false]);
+    else if(l.t === 'double') lines.push(['💥 Offerta raddoppiata!', false]);
+    else if(l.t === 'crowd') lines.push(['🗳️ Il pubblico ha scelto il pacco da aprire', false]);
+    else if(l.t === 'offer') lines.push([`📞 Il Dottore offre <b>${l.amount}</b>`, false]);
+    else if(l.t === 'reject') lines.push([`❌ ${esc(byId(m.conc).name)} rifiuta ${l.amount}`, false]);
+    else if(l.t === 'cambio') lines.push([`🔄 Cambio accettato: ${pk(l.from)} → ${pk(l.to)}`, false]);
+    else if(l.t === 'deal') lines.push([`✅ Affare fatto a <b>${l.amount}</b>!`, true]);
+    else if(l.t === 'switch') lines.push([`🔄 Cambio finale: ${pk(l.from)} → ${pk(l.to)}`, true]);
+    else if(l.t === 'keep') lines.push(['✊ Tiene il suo pacco fino alla fine', true]);
+  });
+  return lines;
+}
+
+function endHTML(){
+  const m = M(), r = m.result, conc = byId(m.conc), doc = byId(m.doc);
+  let headline;
+  if(r.kind === 'deal') headline = r.regret > 0
+    ? `😭 Accettato ${r.amount}… ma nel pacco c'era ${r.v}! Rimpianto: ${r.regret}`
+    : r.regret < 0 ? `😎 Che colpo! Accettato ${r.amount} e nel pacco c'era solo ${r.v}` : `🎯 Cifra esatta!`;
+  else headline = `🎁 Nel pacco c'era… ${r.v}!`;
+  const rows = Object.entries(r.gains).filter(([,n]) => n !== 0).sort((a,b) => b[1] - a[1]).map(([id,n]) => {
+    const p = byId(Number(id));
+    const tag = p.id === m.conc ? '🎯 Concorrente' : p.id === m.doc ? '📞 Dottore' : '🗳️ Pubblico';
+    return `<div class="gain" style="--c:${p.color}"><span>${p.av}</span><span class="nm">${esc(p.name)} <small style="color:var(--mute)">${tag}</small></span>
+      <span class="d ${n < 0 ? 'neg' : ''}">${n > 0 ? '+' : ''}${n}</span></div>`;
+  }).join('');
+  const lines = replayLines();
+  return `
+    <span class="badge">FINE DELLA PARTITA ${G.idx + 1} DI ${G.total}</span>
+    <div class="huge ${isRed(r.v) ? 'red' : 'blue'}">${r.v}</div>
+    <div class="big">${headline}</div>
+    <div class="lead">🎁 ${conc.av} ${esc(conc.name)} vince <b>${r.win}</b> punti e il pegno/premio:</div>
+    <div class="big" style="font-size:clamp(1.4rem,3.6vw,2.4rem);color:var(--gold)">${esc(r.prize)}</div>
+    <div class="result">${rows}</div>
+    <div class="lead">🎬 Il replay della partita</div>
+    <ul class="timeline">${lines.map(([t,hl],i) => `<li class="${hl ? 'hl' : ''}" style="animation-delay:${i * .25}s">${t}</li>`).join('')}</ul>
+    <button class="btn big" onclick="nextMatch()">${G.idx + 1 >= G.total ? '🏆 Al verdetto della serata' : 'Prossima partita ▶ (cambiano i ruoli!)'}</button>`;
+}
+
+function scoreboard(){
+  const m = M();
+  return `<div class="score">${G.players.map(p => `
+    <div class="pl" style="--c:${p.color}"><div class="who"><span>${p.av}</span><span class="nm">${esc(p.name)}</span>${linked(p) ? '<span title="Telefono">📱</span>' : ''}</div>
+      <div class="pts ${p.score < 0 ? 'neg' : ''}">${p.score}</div>
+      <div class="role">${m ? (roleOf(p) === 'conc' ? '🎯 CONCORRENTE' : roleOf(p) === 'doc' ? '📞 DOTTORE' : '📦 PACCHISTA') : ''}</div></div>`).join('')}</div>`;
+}
+
+function viewPlay(){
+  const m = M();
+  const conc = byId(m.conc);
+  const clickPick = m.stage === 'pick' && !linked(conc) ? 'doPick' : (m.stage === 'call' && !linked(conc) ? 'doCall' : '');
+  return `${topbar()}
+    <div class="tv">
+      ${ladder('blue')}
+      <div class="center">
+        ${rolesStrip()}
+        <main class="stage">${stageHTML()}</main>
+        ${m.stage !== 'roles' ? pkgGrid(clickPick) : ''}
+      </div>
+      ${ladder('red')}
+    </div>
+    ${scoreboard()}`;
+}
+
+function viewFinal(){
+  const r = [...G.players].sort((a,b) => b.score - a.score);
+  const tie = r.length > 1 && r[0].score === r[1].score;
+  const slot = (p,k) => p ? `<div class="step p${k}" style="--c:${p.color}"><div class="av">${p.av}</div><div><b>${esc(p.name)}</b></div><div class="pts">${p.score}</div></div>` : '';
+  const top = fn => { const s = [...G.players].sort((a,b) => fn(b) - fn(a)); return fn(s[0]) > 0 ? s[0] : null; };
+  const awards = [
+    [top(p => p.st.docGain), '📞', 'Il Dottore Spietato', p => `${p.st.docGain} punti rubati ai concorrenti`],
+    [top(p => p.st.bets), '🔮', 'Il Veggente', p => `${p.st.bets} colori azzeccati`],
+    [top(p => p.st.votes), '🧠', 'Il Fiuto Infallibile', p => `${p.st.votes} voti giusti`],
+    [top(p => p.st.rejected), '🧊', 'Nervi d\'Acciaio', p => `${p.st.rejected} offerte rifiutate`],
+    [top(p => p.st.redHeld), '🔴', 'Il Menagramo', p => `${p.st.redHeld} pacchi rossi aperti: lo temevano tutti!`]
+  ].filter(a => a[0]);
+  return `${topbar()}
+  <main class="stage end">
+    <h1>${tie ? 'PAREGGIO EPICO!' : '🏆 ' + esc(r[0].name.toUpperCase()) + ' VINCE LA SERATA!'}</h1>
+    <div class="podium">${slot(r[1],2)}${slot(r[0],1)}${slot(r[2],3)}</div>
+    ${r.length > 3 ? `<p class="hint">${r.slice(3).map((p,i) => `${i + 4}. ${p.av} ${esc(p.name)} (${p.score})`).join(' · ')}</p>` : ''}
+    <div class="awards">${awards.map(([p,e,t,f]) => `<div class="award"><span class="e">${e}</span><div><b>${t}</b><span>${p.av} ${esc(p.name)} · ${f(p)}</span></div></div>`).join('')}</div>
+    <div class="actions">
+      <button class="btn big" onclick="startGame()">🔁 Rivincita</button>
+      <button class="btn ghost" onclick="restart2()">Cambia giocatori</button>
+      <a class="btn ghost" href="index.html">🏠 Home</a>
+    </div>
+  </main>`;
+}
+function restart2(){ G.phase = 'setup'; G.m = null; render(); }
+
+/* =====================================================================
+   TELEFONI: cosa vede e cosa può fare ogni giocatore collegato
+   ===================================================================== */
+const LAST = {};
+const hash = str => { let h = 5381; for(let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+const playerByPid = pid => G.players.find(p => p.pid === pid);
+const opt = (id, label, extra = {}) => ({id, label, ...extra});
+const waitScreen = (emoji, title, text, extra = {}) => ({emoji, title, text, wait:true, groups:[], ...extra});
+const valuesBoard = () => G.m ? VALUES.map(v => ({t:String(v), red:isRed(v), gone:isGone(v)})) : [];
+
+function adoptMembers(){
+  let changed = false;
+  Net.members.filter(m => m.online).forEach(m => {
+    if(playerByPid(m.pid)) return;
+    const nn = norm(m.name);
+    let p = G.players.find(x => !linked(x) && norm(x.name) === nn);
+    if(!p && G.phase === 'setup'){
+      p = mkPlayer({name:m.name, av:suggestEmoji(m.name, G.players.map(x => x.av)), color:COLORS[G.players.length % COLORS.length]}, G.players.length);
+      G.players.push(p);
+    }
+    if(p){ p.pid = m.pid; changed = true; }
+  });
+  return changed;
+}
+function unlinkedScreen(){
+  const free = G.players.filter(p => !linked(p));
+  if(G.phase !== 'setup' && free.length) return {
+    emoji:'🙋', title:'Chi sei?', text:'Scegli il tuo nome tra i giocatori.',
+    groups:[{layout:'list', options:free.map(p => opt('claim:' + p.id, p.name, {emoji:p.av}))}]};
+  return waitScreen('👀', 'Spettatore', 'La partita è in corso: guarda lo schermo!');
+}
+
+function pkgOptions(){
+  const m = G.m;
+  return m.vals.map((_,i) => i).filter(i => !m.opened[i] && i !== m.own)
+    .map(i => opt('k:' + i, String(i + 1), {sub:(byId(m.holders[i]) || {}).av || ''}));
+}
+
+function screenFor(p){
+  if(G.phase === 'setup') return waitScreen('🎁', 'Sei dentro!', 'Aspetta che si apra il gioco.');
+  if(G.phase === 'final'){
+    const pos = [...G.players].sort((a,b) => b.score - a.score).findIndex(x => x.id === p.id) + 1;
+    return waitScreen(pos === 1 ? '🏆' : '🎉', pos === 1 ? 'Hai vinto la serata!' : `Sei ${pos}°`, `Punteggio finale: ${p.score}`);
+  }
+  const m = G.m, role = roleOf(p), st = m.stage;
+  const conc = byId(m.conc), doc = byId(m.doc);
+  const holder = m.calling !== null ? byId(m.holders[m.calling]) : null;
+  const vb = valuesBoard();
+  const ticker = m.ticker ? `📞 Il Dottore: “${m.ticker.text}”` : '';
+  const isHolder = holder && holder.id === p.id;
+  const roleName = {conc:'CONCORRENTE', doc:'DOTTORE', pac:'PACCHISTA'}[role];
+  const roleEm = {conc:'🎯', doc:'📞', pac:'📦'}[role];
+
+  switch(st){
+    case 'roles': return waitScreen(roleEm, `Sei il ${roleName}!`,
+      role === 'pac' ? `Hai i pacchi: ${pkgsOf(p).map(i => i + 1).join(', ')}. Li aprirai tu quando verranno chiamati.`
+        : role === 'conc' ? 'Sceglierai il tuo pacco e deciderai se accettare le offerte.' : 'Sarai la banca: dovrai fare offerte e metterlo sotto pressione!',
+      {values:vb});
+    case 'pick':
+      return role === 'conc'
+        ? {emoji:'🎯', title:'Scegli il TUO pacco!', text:'Quale numero tieni fino alla fine?', values:vb,
+           groups:[{layout:'grid', options:m.vals.map((_,i) => opt('k:' + i, String(i + 1), {sub:(byId(m.holders[i]) || {}).av || ''}))}]}
+        : waitScreen('🎯', `${conc.name} sceglie il suo pacco…`, '', {values:vb});
+    case 'bets':
+      return role === 'conc'
+        ? waitScreen('🙈', 'Il pubblico scommette!', 'Sul colore del tuo pacco…', {values:vb})
+        : {emoji:'🔮', title:`Il pacco di ${conc.name} è…`, text:'Indovinare vale +3 punti.', values:vb, selected:m.bets[p.id] ? ['b:' + m.bets[p.id]] : [],
+           groups:[{layout:'grid', options:[opt('b:blue', 'BLU', {emoji:'🔵', sub:'meno di 20'}), opt('b:red', 'ROSSO', {emoji:'🔴', sub:'20 o più', tone:'ko'})]}]};
+    case 'call':
+      if(role === 'conc') return {emoji:'📦', title:`Apri ${m.quota} ${m.quota === 1 ? 'pacco' : 'pacchi'}`, text:ticker || 'Quale pacco vuoi aprire?', values:vb, groups:[{layout:'grid', options:pkgOptions()}]};
+      return waitScreen(role === 'doc' ? '📞' : '📦', `${conc.name} sceglie i pacchi…`, ticker || `Restano da aprire: ${m.quota}`,
+        {values:vb, tags:undefined});
+    case 'opening':
+      if(isHolder) return {emoji:'🎁', title:`Il tuo pacco n.${m.calling + 1}!`, text:'Il Concorrente l\'ha chiamato. Sei pronto?', values:vb,
+                           groups:[{options:[opt('open', 'Apri il pacco!', {emoji:'🎁', tone:'ok'})]}], buzz:true};
+      return waitScreen('📦', `Il pacco n.${m.calling + 1} sta per essere aperto…`, `È di ${holder ? holder.name : '?'}`, {values:vb, anim:'drum'});
+    case 'suspense': return waitScreen('🥁', '…', `Il pacco n.${m.calling + 1}`, {anim:'drum', values:vb});
+    case 'reveal': {
+      const v = m.vals[m.calling], red = isRed(v);
+      if(isHolder) return waitScreen(red ? '🎉' : '😒', red ? `ROSSO! ${v}` : `Blu… ${v}`, red ? 'Festa! Il Concorrente piange!' : 'Fischi! Un premio piccolo…', {values:vb, fx:red ? 'party' : 'boo', big:String(v)});
+      if(role === 'conc') return waitScreen(red ? '😱' : '😎', `${v}`, red ? 'Ahi, un premio grosso se ne va!' : 'Evviva, era uno piccolo!', {values:vb, fx:red ? 'boo' : 'party'});
+      return waitScreen(red ? '🔴' : '🔵', `${v}`, `Pacco n.${m.calling + 1}`, {values:vb});
+    }
+    case 'special': {
+      const sp = SPECIALS[m.specials[m.calling]];
+      return waitScreen(sp.em, sp.name + '!', sp.text, {values:vb, fx:'party'});
+    }
+    case 'crowdvote':
+      return role === 'conc'
+        ? waitScreen('🗳️', 'Il pubblico decide…', 'Quale pacco aprire?', {values:vb})
+        : {emoji:'🗳️', title:'Il pubblico decide!', text:'Quale pacco si apre adesso?', values:vb, selected:m.crowdVotes[p.id] !== undefined ? ['c:' + m.crowdVotes[p.id]] : [],
+           groups:[{layout:'grid', options:m.crowd.map(i => opt('c:' + i, String(i + 1), {sub:(byId(m.holders[i]) || {}).av || ''}))}]};
+    case 'ring': {
+      if(role === 'doc'){
+        const d = m.draft, eff = d.amount * (m.dbl ? 2 : 1);
+        const adj = (id, label) => opt('a:' + id, label);
+        return {emoji:'📞', title:m.dbl ? '⚠️ Offerta RADDOPPIATA!' : 'Prepara l\'offerta', big:String(eff),
+          text:`Equa: ${d.fair} · media rimasta: ${(remainingVals().reduce((a,b) => a + b, 0) / remainingVals().length).toFixed(1)}${m.dbl ? ' · quello che scrivi vale ×2' : ''}`,
+          values:vb,
+          groups:[
+            {title:'Aggiusta', layout:'grid', options:[adj('m5','−5'), adj('m1','−1'), adj('p1','+1'), adj('p5','+5')]},
+            {title:'Percentuali', layout:'grid', options:[adj('x50','−50%'), adj('x75','−25%'), adj('fair','Equa'), adj('x125','+25%'), adj('x150','+50%')]},
+            {options:[opt('cambio', d.cambio ? 'Cambio proposto ✔' : 'Proponi anche il cambio', {emoji:'🔄', tone:d.cambio ? 'sel' : ''})]},
+            {title:'Metti pressione', layout:'list', options:MSGS.map((t,i) => opt('m:' + i, t))},
+            {options:[opt('send', 'Invia offerta', {emoji:'📞', tone:'ok'})]}
+          ],
+          input:{id:'msg', placeholder:'Scrivi un messaggio per il Concorrente…', max:70, label:'Invia messaggio'}};
+      }
+      if(role === 'conc') return waitScreen('📞', 'Il Dottore ti sta chiamando…', ticker || 'Preparati all\'offerta!', {anim:'ring', buzz:true, values:vb});
+      return waitScreen('📞', 'Squilla il telefono del Dottore!', ticker || 'Preparati a votare l\'offerta.', {anim:'ring', values:vb});
+    }
+    case 'offer': {
+      const o = curOffer();
+      const tl = voters().reduce((a, v) => { const x = o.votes[v.id]; if(x) a[x]++; return a; }, {y:0, n:0});
+      const crowdTxt = `Pubblico: ✅ ${tl.y} · ❌ ${tl.n}`;
+      if(role === 'conc') return {emoji:'💰', title:'Offerta del Dottore', big:String(o.amount),
+        text:[o.dbl ? '(×2 pacco speciale!)' : '', ticker, crowdTxt].filter(Boolean).join(' · '), values:vb, buzz:true,
+        groups:[{layout:'grid', options:[opt('accept', 'Accetto', {emoji:'✅', tone:'ok'}), opt('reject', 'Rifiuto', {emoji:'❌', tone:'ko'})]},
+                ...(o.cambio !== null ? [{options:[opt('cambio', `Cambio col pacco n.${o.cambio + 1}`, {emoji:'🔄'})]}] : [])]};
+      if(role === 'doc') return waitScreen('📞', `Offerta inviata: ${o.amount}`, `${conc.name} sta decidendo… ${crowdTxt}`, {values:vb});
+      return {emoji:'🗳️', title:`Offerta: ${o.amount}`, big:String(o.amount), values:vb,
+        text:`${o.cambio !== null ? 'Con proposta di cambio. ' : ''}Cosa deve fare ${conc.name}?`, selected:o.votes[p.id] ? ['v:' + o.votes[p.id]] : [],
+        groups:[{layout:'grid', options:[opt('v:y', 'Accetta', {emoji:'✅', tone:'ok'}), opt('v:n', 'Rifiuta', {emoji:'❌', tone:'ko'})]}]};
+    }
+    case 'switch':
+      return role === 'conc'
+        ? {emoji:'🤔', title:'Ultimo bivio!', text:`Tieni il tuo n.${m.own + 1} o cambi con il n.${others()[0] + 1}?`, values:vb,
+           groups:[{layout:'grid', options:[opt('keep', 'Tengo il mio', {emoji:'✊', tone:'ok'}), opt('swap', 'Cambio', {emoji:'🔄'})]}]}
+        : waitScreen('🤔', `${conc.name} deve decidere…`, 'Tenere o cambiare il pacco?', {values:vb});
+    case 'finalreveal': return waitScreen('🥁', 'Il momento della verità…', `Il pacco n.${m.own + 1} di ${conc.name}`, {anim:'drum'});
+    case 'end': {
+      const r = m.result, g = r.gains[p.id] || 0;
+      return waitScreen(role === 'conc' ? (r.win >= 20 ? '🏆' : '🧽') : '📊', role === 'conc' ? `Hai vinto ${r.win}!` : `Il pacco valeva ${r.v}`,
+        `${role === 'conc' ? r.prize + ' · ' : ''}Tu: ${g >= 0 ? '+' : ''}${g} punti`, {fx:role === 'conc' && r.win >= 20 ? 'party' : undefined});
+    }
+  }
+  return waitScreen('⏳', 'Un attimo…', '');
+}
+
+function syncScreens(){
+  if(Net.status !== 'online') return;
+  const screens = {};
+  Net.members.forEach(mem => {
+    const p = playerByPid(mem.pid);
+    let s;
+    try{ s = p ? {...screenFor(p), me:{av:p.av, name:p.name, color:p.color, score:p.score}} : unlinkedScreen(); }
+    catch(e){ console.error(e); s = waitScreen('⏳', 'Un attimo…', ''); }
+    const {timer, ...core} = s;
+    s.sid = hash(JSON.stringify(core));
+    LAST[mem.pid] = s; screens[mem.pid] = s;
+  });
+  Net.push(screens, G.players.map(p => p.name));
+}
+
+function onAct(pid, d){
+  const id = String(d.id), p = playerByPid(pid);
+  if(!p){
+    if(id.startsWith('claim:')){ const t = byId(Number(id.slice(6))); if(t && !linked(t)){ t.pid = pid; render(); } }
+    return;
+  }
+  if(G.phase !== 'play' || !LAST[pid] || d.sid !== LAST[pid].sid) return;
+  const m = G.m, st = m.stage, role = roleOf(p);
+  const num = pre => Number(id.slice(pre.length));
+
+  if(st === 'pick' && role === 'conc' && id.startsWith('k:')) doPick(num('k:'));
+  else if(st === 'bets' && role !== 'conc' && id.startsWith('b:')) doBet(p.id, id.slice(2));
+  else if(st === 'call' && role === 'conc' && id.startsWith('k:')) doCall(num('k:'));
+  else if(st === 'opening' && id === 'open' && m.calling !== null && m.holders[m.calling] === p.id) doOpen();
+  else if(st === 'crowdvote' && id.startsWith('c:')) doCrowd(p.id, num('c:'));
+  else if(st === 'ring' && role === 'doc'){
+    if(id.startsWith('a:')) docAdj(id.slice(2));
+    else if(id === 'cambio') docCambio();
+    else if(id.startsWith('m:')) docMsg(MSGS[num('m:')]);
+    else if(id === 'msg') docMsg(d.text);
+    else if(id === 'send') sendOffer();
+  }
+  else if(st === 'offer'){
+    if(role === 'conc' && ['accept','reject','cambio'].includes(id)) doDecision(id);
+    else if(role === 'pac' && id.startsWith('v:')) doVote(p.id, id.slice(2));
+  }
+  else if(st === 'switch' && role === 'conc' && (id === 'keep' || id === 'swap')) doSwitch(id === 'swap');
+}
+
+/* ---------- avvio ---------- */
+Party.muted = G.muted;
+if(G.phase === 'setup'){
+  const r = loadRoster();
+  if(r){
+    const old = G.players;
+    G.players = r.map((x,i) => mkPlayer({...x, pid:(old.find(o => norm(o.name) === norm(x.name)) || {}).pid}, i));
+  }
+}
+if(G.phase === 'play' && G.m){
+  if(G.m.stage === 'suspense') G.m.stage = 'opening';
+  else if(G.m.stage === 'finalreveal') showResult();
+  else if(G.m.stage === 'ring'){ /* riparte la suoneria */ }
+}
+if(G.phase === 'play' && (!G.m || G.players.length < 3)) G = fresh();
+render();
+if(G.phase === 'play' && G.m && G.m.stage === 'ring') RING = setInterval(() => tone([[880,.12,'square'],[698,.12,'square'],[880,.12,'square'],[698,.12,'square']]), 1800);
+Net.start({onAct, onChange:() => { adoptMembers(); render(); }});
+</script>
+</body>
+</html>

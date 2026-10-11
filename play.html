@@ -42,6 +42,16 @@
   .o.ghost{background:transparent}
   .o:disabled{opacity:.4;pointer-events:none}
   .pulse{animation:pulse 1.4s infinite}
+  .anim-drum{animation:drum .3s infinite}
+  .anim-ring{animation:ring .5s infinite}
+  @keyframes drum{25%{transform:translate(-5px,3px) rotate(-3deg)}75%{transform:translate(5px,-3px) rotate(3deg)}}
+  @keyframes ring{20%{transform:rotate(-18deg)}40%{transform:rotate(16deg)}60%{transform:rotate(-12deg)}80%{transform:rotate(10deg)}}
+  .vals{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:420px}
+  .vals span{min-width:42px;padding:3px 6px;border-radius:8px;font-family:var(--title);font-size:1rem;color:#fff}
+  .vals .b{background:#1f6bff}.vals .r{background:#e8203f}.vals .gone{opacity:.2;text-decoration:line-through}
+  .inputrow{width:100%;display:flex;gap:8px}
+  .inputrow input{flex:1;min-width:0;background:#050a3a;border:3px solid #ffffff30;border-radius:14px;color:var(--ink);padding:12px;font:inherit;font-size:1.05rem}
+  .inputrow input:focus{outline:none;border-color:var(--gold)}
   .join{width:100%;display:grid;gap:12px}
   .join input{background:#050a3a;border:3px solid #ffffff30;border-radius:14px;color:var(--ink);padding:14px;font:inherit;font-size:1.3rem;text-align:center}
   .join input:focus{outline:none;border-color:var(--gold)}
@@ -148,7 +158,8 @@ function render(){
   if(!s){
     html += `<div class="emoji pulse">⏳</div><div class="title">Ci sei!</div><p class="text">Aspetta che l'host faccia partire il gioco.</p>`;
   }else{
-    if(s.emoji) html += `<div class="emoji ${s.wait ? 'pulse' : ''}">${s.emoji}</div>`;
+    if(s.values && s.values.length) html += `<div class="vals">${s.values.map(v => `<span class="${v.red ? 'r' : 'b'} ${v.gone ? 'gone' : ''}">${esc(v.t)}</span>`).join('')}</div>`;
+    if(s.emoji) html += `<div class="emoji ${s.anim ? 'anim-' + s.anim : (s.wait ? 'pulse' : '')}">${s.emoji}</div>`;
     if(s.title) html += `<div class="title">${esc(s.title)}</div>`;
     if(s.big) html += `<div class="big">${esc(s.big)}</div>`;
     if(s.tags && s.tags.length) html += `<div class="tags">${s.tags.map(t => `<span>🚫 ${esc(t)}</span>`).join('')}</div>`;
@@ -162,8 +173,33 @@ function render(){
       </div></div>`;
     });
   }
+  if(s && s.input){
+    html += `<form class="inputrow" onsubmit="sendText(event)"><input id="txt" maxlength="${s.input.max || 60}" placeholder="${esc(s.input.placeholder || '')}" autocomplete="off">
+      <button class="btn small" type="submit">${esc(s.input.label || 'Invia')}</button></form>`;
+  }
   html += '</main>';
+  const typed = $('#txt') ? $('#txt').value : '';
   $('#app').innerHTML = html;
+  if(typed && $('#txt')) $('#txt').value = typed;
+  if(s && s.fx && lastFx !== s.sid){ lastFx = s.sid; fire(s.fx); }
+}
+
+/* effetti: festa o fischi */
+let lastFx = null;
+function fire(kind){
+  const list = kind === 'boo' ? ['🍅','👎','😒','🤡','💩'] : ['🎉','🥳','✨','🎊','🔥'];
+  for(let i = 0; i < 28; i++){
+    const e = document.createElement('div');
+    e.className = 'fx'; e.textContent = list[i % list.length];
+    e.style.left = Math.random() * 100 + 'vw';
+    e.style.fontSize = (20 + Math.random() * 30) + 'px';
+    e.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
+    e.style.animationDelay = Math.random() * .4 + 's';
+    e.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    document.body.appendChild(e);
+    setTimeout(() => e.remove(), 4200);
+  }
+  if(navigator.vibrate) navigator.vibrate(kind === 'boo' ? [80, 60, 80] : [40, 40, 40, 40, 120]);
 }
 
 async function act(id){
@@ -173,6 +209,13 @@ async function act(id){
   render();
   if(navigator.vibrate) navigator.vibrate(25);
   try{ await post('/api/act', {room, pid:me.pid, data:{sid:spec.sid, id}}); }catch(e){}
+}
+async function sendText(e){
+  e.preventDefault();
+  const el = $('#txt'); if(!el || !spec || !spec.input) return;
+  const text = el.value.trim(); if(!text) return;
+  el.value = '';
+  try{ await post('/api/act', {room, pid:me.pid, data:{sid:spec.sid, id:spec.input.id, text:text.slice(0, 80)}}); }catch(err){}
 }
 const togglePick = (arr, id) => arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
 
