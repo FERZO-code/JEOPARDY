@@ -4,7 +4,7 @@
   "private": true,
   "description": "Party Night: Jeopardy e giochi tra amici, anche dai telefoni",
   "scripts": {
-    "start": "node server.js"
+    "start": "node party-server.js"
   },
   "license": "MIT"
 }

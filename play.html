@@ -101,28 +101,39 @@ async function joinAs(name){
   }catch(e){ showJoin(e.message === 'stanza piena' ? 'La stanza è piena.' : 'Non riesco a entrare, riprova.'); }
 }
 
-/* ---------- connessione ---------- */
-let es = null;
+/* ---------- connessione (polling) ---------- */
+const POLL_MS = 900;
+let loopId = 0;
 function connect(){
-  if(es) es.close();
+  const my = ++loopId;                       // un solo ciclo attivo alla volta
   render();
-  es = new EventSource(`/api/events?room=${room}&pid=${me.pid}`);
-  es.onopen = () => { online = true; render(); };
-  es.onerror = async () => {
-    online = false; render();
-    if(es.readyState !== 2) return;          // errore di rete: il browser riprova da solo
-    // il server non ci riconosce più (es. è stato riavviato): rientra con lo stesso nome
-    try{
-      const r = await post('/api/join', {room, pid:me.pid, name:me.name});
-      me.pid = r.pid; saveMe(); connect();
-    }catch(e){ localStorage.removeItem(MEKEY); me = null; showJoin(); }
-  };
-  es.addEventListener('screen', e => {
-    const next = JSON.parse(e.data);
-    if(!spec || spec.sid !== next.sid) picked = {};
-    spec = next; busy = false; render();
-    if(navigator.vibrate && next.buzz) navigator.vibrate(60);
-  });
+  let n = 0, ver = '';
+  (async function loop(){
+    while(my === loopId){
+      try{
+        const hb = n % 4 === 0 ? '&hb=1&name=' + encodeURIComponent(me.name) : '';
+        const r = await fetch(`/api/poll?room=${room}&pid=${me.pid}&v=${encodeURIComponent(ver)}${hb}`, {cache:'no-store'});
+        const j = await r.json();
+        if(!r.ok) throw new Error(j.error || r.status);
+        if(!online){ online = true; render(); }
+        if(j.gone){                          // stanza o giocatore non più noti: rientra col nome
+          try{
+            const jr = await post('/api/join', {room, pid:me.pid, name:me.name});
+            me.pid = jr.pid; saveMe(); ver = '';
+          }catch(e){ localStorage.removeItem(MEKEY); me = null; showJoin(); return; }
+        }else if(j.screen){
+          ver = j.ver;
+          if(!spec || spec.sid !== j.screen.sid) picked = {};
+          spec = j.screen; busy = false; render();
+          if(navigator.vibrate && spec.buzz) navigator.vibrate(60);
+        }
+      }catch(e){
+        if(online){ online = false; render(); }
+      }
+      n++;
+      await new Promise(r => setTimeout(r, POLL_MS));
+    }
+  })();
 }
 
 /* ---------- schermo ---------- */

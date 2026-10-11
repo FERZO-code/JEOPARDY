@@ -1,0 +1,7 @@
+.vercel
+.env*
+
+# file creati dall'integrazione Marketplace (non servono al sito)
+.agents/
+.claude/
+skills-lock.json

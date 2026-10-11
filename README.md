@@ -2,22 +2,27 @@
 
 Giochi da fare con gli amici: **Jeopardy Night** e **Chi Sei Davvero?**
 
-## Giocare tutti insieme da un solo schermo
-Apri `index.html` con un doppio clic. Non serve nulla di più.
+## Online (Vercel)
+Il sito è statico + una funzione (`api/party.js`). Le stanze per giocare dai telefoni stanno in **Upstash Redis**
+(integrazione del Marketplace di Vercel).
 
-## Giocare dai telefoni (QR code)
-Serve solo [Node.js](https://nodejs.org) (nessuna dipendenza da installare).
+1. Vercel → progetto → **Storage** → Upstash for Redis → collegalo al progetto (oppure
+   `vercel integration add upstash/upstash-kv`).
+2. Ridistribuisci (push su GitHub).
+3. Apri il sito, scegli un gioco, premi **📱 Telefoni**: ognuno scansiona il QR code col proprio telefono.
 
+Variabili usate (le crea l'integrazione): `KV_REST_API_URL` e `KV_REST_API_TOKEN`
+(oppure `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN`).
+
+## In casa, senza internet né database
 ```bash
-node server.js     # oppure: npm start
+node party-server.js     # oppure: npm start
 ```
+Apri il link con l'indirizzo IP mostrato nel terminale; computer e telefoni sulla stessa rete Wi-Fi.
+Le stanze stanno in memoria.
 
-1. Apri sul computer il link che compare nel terminale (quello con l'indirizzo IP, es. `http://192.168.1.37:3000`).
-2. Scegli un gioco e premi **📱 Telefoni** per mostrare il QR code.
-3. Ognuno lo inquadra con il telefono, scrive il nome ed è dentro.
-
-Computer e telefoni devono essere sulla **stessa rete Wi-Fi**. Il computer fa da "banco": tiene la partita e
-mostra il tabellone; i telefoni servono per rispondere. Chi non ha il telefono può giocare comunque dal computer.
+## Da un solo schermo
+Apri `index.html` (o il sito) e gioca tutti insieme: il telefono è facoltativo.
 
 ## File
 | File | Cosa fa |
@@ -26,5 +31,7 @@ mostra il tabellone; i telefoni servono per rispondere. Chi non ha il telefono p
 | `jeopardy.html` | Jeopardy Night |
 | `chisei.html` | Chi Sei Davvero? (4 parti) |
 | `play.html` | Schermata che si apre sui telefoni |
-| `server.js` | Server locale per il multi-dispositivo (solo Node, nessun pacchetto) |
+| `api/party.js` | Funzione Vercel con le API delle stanze (Upstash Redis) |
+| `lib/party-api.js` | Logica delle stanze, condivisa con il server locale |
+| `party-server.js` | Server locale facoltativo (stanze in memoria) |
 | `net.js`, `shared.js`, `shared.css`, `qrcode.js` | Codice condiviso (`qrcode.js`: libreria MIT di Kazuhiko Arase) |
