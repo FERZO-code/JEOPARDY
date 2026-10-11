@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060b3a">
+<title>Party Night · Telefono</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  html,body{min-height:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  body{display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));
+       background:#0b1568;border-bottom:4px solid var(--c,var(--gold))}
+  .top .av{font-size:1.8rem;line-height:1}
+  .top .nm{flex:1;font-weight:700;font-size:1.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top .sc{font-family:var(--title);font-size:1.6rem;color:var(--gold)}
+  .conn{font-size:.8rem;color:var(--ko);text-align:center;padding:4px;background:#ff547022}
+  main{flex:1;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 14px 28px;text-align:center;max-width:560px;width:100%;margin:0 auto}
+  .emoji{font-size:clamp(3.4rem,18vw,5.5rem);line-height:1}
+  .title{font-family:var(--title);font-size:1.7rem;line-height:1.2;color:var(--gold);letter-spacing:.03em}
+  .big{font-family:var(--title);font-size:clamp(2rem,10vw,3.2rem);line-height:1.15;text-shadow:0 3px 0 #0005}
+  .text{color:#dfe4ff;font-size:1.1rem;line-height:1.35}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+  .tags span{background:#ff547033;border:2px solid var(--ko);border-radius:99px;padding:3px 12px;font-weight:700}
+  .timer{font-family:var(--title);font-size:2.4rem;color:var(--ok)}
+  .timer.low{color:var(--ko)}
+  .group{width:100%;display:grid;gap:10px}
+  .group h4{font-weight:600;color:var(--mute);font-size:1rem}
+  .opts{display:grid;gap:10px;grid-template-columns:1fr}
+  .opts.grid{grid-template-columns:1fr 1fr}
+  .o{display:flex;align-items:center;justify-content:center;gap:10px;min-height:62px;padding:12px 14px;border-radius:16px;
+     background:#ffffff14;border:3px solid #ffffff30;font-weight:700;font-size:1.15rem;line-height:1.15;transition:transform .08s,background .15s}
+  .o:active{transform:scale(.97)}
+  .o .e{font-size:1.5rem}
+  .o small{display:block;color:var(--mute);font-weight:500;font-size:.8rem}
+  .o.sel{background:var(--gold);color:#1a1200;border-color:#fff}
+  .o.ok{background:var(--ok);color:#00230f;border-color:#fff}
+  .o.ko{background:var(--ko);color:#2a0008;border-color:#fff}
+  .o.ghost{background:transparent}
+  .o:disabled{opacity:.4;pointer-events:none}
+  .pulse{animation:pulse 1.4s infinite}
+  .join{width:100%;display:grid;gap:12px}
+  .join input{background:#050a3a;border:3px solid #ffffff30;border-radius:14px;color:var(--ink);padding:14px;font:inherit;font-size:1.3rem;text-align:center}
+  .join input:focus{outline:none;border-color:var(--gold)}
+  .err{color:var(--ko);font-weight:600}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const room = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+const MEKEY = 'party-me-' + room;
+let me = null;           // {pid, name}
+let spec = null;         // ultimo schermo ricevuto
+let picked = {};         // scelte locali evidenziate: sid -> [ids]
+let online = false, busy = false;
+
+function loadMe(){ try{ return JSON.parse(localStorage.getItem(MEKEY)); }catch(e){ return null; } }
+function saveMe(){ try{ localStorage.setItem(MEKEY, JSON.stringify(me)); }catch(e){} }
+async function post(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(j.error || 'errore');
+  return j;
+}
+
+/* ---------- ingresso ---------- */
+async function showJoin(err){
+  let info = {exists:false};
+  try{ info = await fetch('/api/room-info?room=' + room).then(r => r.json()); }catch(e){}
+  if(!info.exists){
+    $('#app').innerHTML = `<main><div class="emoji">🤷</div><div class="title">Stanza non trovata</div>
+      <p class="text">Il codice <b>${esc(room || '—')}</b> non esiste (più). Chiedi all'host di mostrare di nuovo il QR code.</p></main>`;
+    return;
+  }
+  $('#app').innerHTML = `<main>
+    <div class="emoji">🎉</div>
+    <div class="title">Stanza ${esc(room)}</div>
+    <form class="join" onsubmit="doJoin(event)">
+      <p class="text">Come ti chiami?</p>
+      <input id="nm" maxlength="16" placeholder="Il tuo nome" autocomplete="off" autocapitalize="words" autofocus>
+      <button class="btn big" type="submit">Entra ▶</button>
+      ${err ? `<p class="err">${esc(err)}</p>` : ''}
+    </form>
+    ${info.roster && info.roster.length ? `
+      <div class="group"><h4>…oppure sono uno di questi:</h4>
+      <div class="opts grid">${info.roster.map(n => `<button class="o" onclick="joinAs(${JSON.stringify(n).replace(/"/g,'&quot;')})">${esc(n)}</button>`).join('')}</div></div>` : ''}
+  </main>`;
+}
+function doJoin(e){ e.preventDefault(); const n = $('#nm').value.trim(); if(n) joinAs(n); }
+async function joinAs(name){
+  try{
+    const r = await post('/api/join', {room, name});
+    me = {pid:r.pid, name:r.name}; saveMe(); connect();
+  }catch(e){ showJoin(e.message === 'stanza piena' ? 'La stanza è piena.' : 'Non riesco a entrare, riprova.'); }
+}
+
+/* ---------- connessione ---------- */
+let es = null;
+function connect(){
+  if(es) es.close();
+  render();
+  es = new EventSource(`/api/events?room=${room}&pid=${me.pid}`);
+  es.onopen = () => { online = true; render(); };
+  es.onerror = async () => {
+    online = false; render();
+    if(es.readyState !== 2) return;          // errore di rete: il browser riprova da solo
+    // il server non ci riconosce più (es. è stato riavviato): rientra con lo stesso nome
+    try{
+      const r = await post('/api/join', {room, pid:me.pid, name:me.name});
+      me.pid = r.pid; saveMe(); connect();
+    }catch(e){ localStorage.removeItem(MEKEY); me = null; showJoin(); }
+  };
+  es.addEventListener('screen', e => {
+    const next = JSON.parse(e.data);
+    if(!spec || spec.sid !== next.sid) picked = {};
+    spec = next; busy = false; render();
+    if(navigator.vibrate && next.buzz) navigator.vibrate(60);
+  });
+}
+
+/* ---------- schermo ---------- */
+function render(){
+  if(!me) return;
+  const s = spec;
+  const meInfo = (s && s.me) || {av:'🙂', name:me.name, color:'#ffcf3d', score:null};
+  const sel = (s && (picked[s.sid] || s.selected)) || [];
+  let html = `<div class="top" style="--c:${meInfo.color}"><span class="av">${meInfo.av}</span>
+      <span class="nm">${esc(meInfo.name)}</span>${meInfo.score !== null && meInfo.score !== undefined ? `<span class="sc">${meInfo.score}</span>` : ''}</div>
+    ${online ? '' : '<div class="conn">Riconnessione in corso…</div>'}<main>`;
+  if(!s){
+    html += `<div class="emoji pulse">⏳</div><div class="title">Ci sei!</div><p class="text">Aspetta che l'host faccia partire il gioco.</p>`;
+  }else{
+    if(s.emoji) html += `<div class="emoji ${s.wait ? 'pulse' : ''}">${s.emoji}</div>`;
+    if(s.title) html += `<div class="title">${esc(s.title)}</div>`;
+    if(s.big) html += `<div class="big">${esc(s.big)}</div>`;
+    if(s.tags && s.tags.length) html += `<div class="tags">${s.tags.map(t => `<span>🚫 ${esc(t)}</span>`).join('')}</div>`;
+    if(s.timer !== undefined && s.timer !== null) html += `<div class="timer ${s.timer <= 10 ? 'low' : ''}">⏱ ${s.timer}</div>`;
+    if(s.text) html += `<p class="text">${esc(s.text)}</p>`;
+    (s.groups || []).forEach((g, gi) => {
+      html += `<div class="group">${g.title ? `<h4>${esc(g.title)}</h4>` : ''}<div class="opts ${g.layout === 'grid' ? 'grid' : ''}">
+        ${g.options.map(o => `<button class="o ${o.tone || ''} ${sel.includes(o.id) ? 'sel' : ''}" ${o.disabled ? 'disabled' : ''}
+          onclick="act(${JSON.stringify(o.id).replace(/"/g,'&quot;')})">${o.emoji ? `<span class="e">${o.emoji}</span>` : ''}
+          <span>${esc(o.label)}${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</span></button>`).join('')}
+      </div></div>`;
+    });
+  }
+  html += '</main>';
+  $('#app').innerHTML = html;
+}
+
+async function act(id){
+  if(!spec || busy) return;
+  busy = true; setTimeout(() => { busy = false; }, 350);
+  picked[spec.sid] = spec.multi ? togglePick(picked[spec.sid] || [], id) : [id];
+  render();
+  if(navigator.vibrate) navigator.vibrate(25);
+  try{ await post('/api/act', {room, pid:me.pid, data:{sid:spec.sid, id}}); }catch(e){}
+}
+const togglePick = (arr, id) => arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
+
+/* ---------- avvio ---------- */
+if(!room){
+  $('#app').innerHTML = '<main><div class="emoji">📷</div><div class="title">Scansiona il QR code</div><p class="text">Chiedi all\'host di mostrare il QR code dal suo schermo.</p></main>';
+}else{
+  me = loadMe();
+  if(me && me.pid){
+    // la stanza esiste ancora e ci conosce?
+    post('/api/join', {room, pid:me.pid, name:me.name}).then(r => { me.pid = r.pid; me.name = r.name; saveMe(); connect(); }).catch(() => { localStorage.removeItem(MEKEY); me = null; showJoin(); });
+  }else showJoin();
+}
+</script>
+</body>
+</html>

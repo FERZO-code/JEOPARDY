@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeopardy Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#060b3a; --bg2:#0a1470; --panel:#0d1a8c; --tile:#1432c8; --tile-hi:#2a4df0;
+    --gold:#ffcf3d; --gold-d:#d99a00; --ink:#f4f6ff; --mute:#9aa6e8;
+    --ok:#2ee6a0; --ko:#ff5470; --radius:16px;
+    --title:'Anton','Impact','Arial Narrow',sans-serif;
+    --body:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--body); color:var(--ink);
+    background:radial-gradient(1200px 700px at 50% -10%, var(--bg2), var(--bg) 70%) fixed;
+    min-height:100vh; overflow-x:hidden;
+  }
+  button{font:inherit;color:inherit;cursor:pointer;border:0}
+  h1,h2,h3{font-family:var(--title);font-weight:400;letter-spacing:.03em}
+  .wrap{max-width:1400px;margin:0 auto;padding:16px}
+
+  /* ---------- buttons ---------- */
+  .btn{background:var(--gold);color:#1a1200;font-weight:700;padding:12px 22px;border-radius:999px;
+       box-shadow:0 4px 0 var(--gold-d);transition:transform .08s, box-shadow .08s, filter .15s;font-size:1.05rem}
+  .btn:hover{filter:brightness(1.07)}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-d)}
+  .btn:disabled{filter:grayscale(1) opacity(.45);cursor:not-allowed;transform:none;box-shadow:0 4px 0 #6b5a20}
+  .btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid #ffffff33;padding:9px 16px;font-weight:600}
+  .btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .btn.small{padding:7px 14px;font-size:.9rem}
+
+  /* ---------- setup ---------- */
+  .hero{text-align:center;padding:26px 0 8px}
+  .hero h1{font-size:clamp(3rem,10vw,6.5rem);color:var(--gold);text-shadow:0 5px 0 #8a5d00,0 12px 30px #0008;line-height:1}
+  .hero p{color:var(--mute);margin-top:10px;font-size:1.1rem}
+  .setup{display:grid;gap:18px;margin-top:18px;grid-template-columns:minmax(0,340px) minmax(0,1fr)}
+  @media (max-width:860px){.setup{grid-template-columns:1fr}}
+  .panel{background:#0b1568cc;border:2px solid #ffffff1a;border-radius:var(--radius);padding:18px;backdrop-filter:blur(4px)}
+  .panel h2{font-size:1.5rem;margin-bottom:12px;color:var(--gold)}
+  .add-row{display:flex;gap:8px}
+  .add-row input{flex:1;min-width:0;background:#050a3a;border:2px solid #ffffff2a;border-radius:12px;color:var(--ink);padding:11px 14px;font:inherit;font-size:1.05rem}
+  .add-row input:focus{outline:none;border-color:var(--gold)}
+  .players{list-style:none;padding:0;margin-top:14px;display:grid;gap:8px}
+  .players li{display:flex;align-items:center;gap:10px;background:#ffffff0f;border-left:6px solid var(--c);padding:8px 10px;border-radius:12px;font-weight:600}
+  .players .av{font-size:1.6rem;background:none;padding:0 2px;line-height:1;transition:transform .15s}
+  .players .av:hover{transform:scale(1.25) rotate(-8deg)}
+  .add-row .prev{display:grid;place-items:center;font-size:1.7rem;min-width:46px;background:#050a3a;border:2px solid #ffffff2a;border-radius:12px}
+  .players .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .players .x{background:none;color:var(--mute);font-size:1.2rem;padding:2px 8px;border-radius:8px}
+  .players .x:hover{color:var(--ko)}
+  .hint{color:var(--mute);font-size:.95rem;margin-top:12px}
+  .cat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .cat-head h2{margin:0}
+  .counter{font-weight:700;color:var(--mute)}
+  .counter b{color:var(--gold);font-size:1.2rem}
+  .cats{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .cat{position:relative;text-align:left;background:#0a1260;border:2px solid #ffffff1f;border-radius:14px;padding:12px;
+       display:flex;flex-direction:column;gap:4px;transition:transform .12s,border-color .12s,background .12s}
+  .cat:hover{transform:translateY(-2px);border-color:var(--cc)}
+  .cat .em{font-size:2rem;line-height:1}
+  .cat .t{font-weight:700;line-height:1.15}
+  .cat .d{font-size:.8rem;color:var(--mute);line-height:1.2}
+  .cat.on{background:linear-gradient(160deg,color-mix(in srgb,var(--cc) 55%,#0a1260),#0a1260);border-color:var(--cc);box-shadow:0 0 0 3px color-mix(in srgb,var(--cc) 40%,transparent)}
+  .cat.on::after{content:"✓";position:absolute;top:8px;right:10px;font-weight:700;color:var(--gold);font-size:1.2rem}
+  .start-bar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px 0 40px}
+  .start-bar .btn{font-size:1.3rem;padding:15px 38px}
+
+  /* ---------- game ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .topbar h1{font-size:1.9rem;color:var(--gold)}
+  .topbar .acts{display:flex;gap:8px}
+  .turn{text-align:center;font-weight:700;margin:2px 0 12px;color:var(--mute)}
+  .turn b{color:var(--gold)}
+  .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:18px}
+  .board .head{
+    background:linear-gradient(180deg,#1b3ef0,#0f27a8);border-bottom:5px solid var(--cc);border-radius:12px;
+    padding:10px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:clamp(70px,11vh,120px)}
+  .board .head .em{font-size:clamp(1.4rem,3vw,2.4rem);line-height:1}
+  .board .head .nm{font-family:var(--title);letter-spacing:.04em;font-size:clamp(.72rem,1.5vw,1.25rem);text-transform:uppercase;line-height:1.1}
+  .tile{
+    background:linear-gradient(180deg,var(--tile-hi),var(--tile));border-radius:12px;
+    font-family:var(--title);font-size:clamp(1.5rem,4.2vw,3.4rem);color:var(--gold);
+    text-shadow:0 3px 0 #0006;min-height:clamp(58px,10vh,110px);
+    box-shadow:inset 0 0 0 2px #ffffff22,0 4px 0 #0a1a78;transition:transform .1s,filter .15s}
+  .tile:hover:not(:disabled){transform:scale(1.04);filter:brightness(1.15)}
+  .tile:active:not(:disabled){transform:scale(.98)}
+  .tile:disabled{background:#0a1260;color:transparent;text-shadow:none;box-shadow:none;cursor:default;opacity:.45}
+
+  .score{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .pl{background:#0b1568cc;border:3px solid transparent;border-top:6px solid var(--c);border-radius:14px;padding:10px 12px;position:relative;transition:transform .15s,border-color .15s}
+  .pl.act{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 0 22px #ffcf3d55}
+  .pl.act::before{content:"👉 sceglie";position:absolute;top:-14px;left:12px;background:var(--gold);color:#1a1200;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:99px}
+  .pl .who{display:flex;align-items:center;gap:8px;font-weight:700}
+  .pl .who .av{font-size:1.5rem}
+  .pl .who .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pl .pts{font-family:var(--title);font-size:2.4rem;line-height:1.1;margin-top:2px;color:var(--ok)}
+  .pl .pts.neg{color:var(--ko)}
+  .pl .adj{display:flex;gap:6px;margin-top:6px}
+  .pl .adj button{flex:1;background:#ffffff14;border-radius:8px;padding:3px 0;font-weight:700;font-size:.85rem}
+  .pl .adj button:hover{background:#ffffff2b}
+  .pl.bump .pts{animation:bump .5s}
+  @keyframes bump{40%{transform:scale(1.3)}}
+
+  /* ---------- modal ---------- */
+  .modal{position:fixed;inset:0;background:#02051acc;backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:14px;z-index:50}
+  .modal.open{display:flex;animation:fade .2s}
+  @keyframes fade{from{opacity:0}}
+  .card{width:min(980px,100%);max-height:100%;overflow:auto;background:radial-gradient(600px 400px at 50% 0,#1a3be6,#0b1788 70%);
+        border:3px solid var(--gold);border-radius:22px;padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;gap:16px;
+        animation:pop .28s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{from{transform:scale(.7);opacity:0}}
+  .card .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-weight:700}
+  .card .meta .c{font-family:var(--title);letter-spacing:.05em;text-transform:uppercase;font-size:1.3rem}
+  .card .meta .v{font-family:var(--title);font-size:1.7rem;color:var(--gold)}
+  .dd{background:linear-gradient(90deg,#ff3d81,#ffb100);color:#fff;font-family:var(--title);padding:6px 16px;border-radius:99px;font-size:1.2rem;animation:pulse 1s infinite;letter-spacing:.06em}
+  @keyframes pulse{50%{transform:scale(1.07)}}
+  .timer{height:10px;background:#ffffff1f;border-radius:99px;overflow:hidden}
+  .timer i{display:block;height:100%;width:100%;background:var(--ok);transform-origin:left;transition:background .3s}
+  .timer i.warn{background:#ffb100}.timer i.bad{background:var(--ko)}
+  .qtext{font-family:var(--title);font-size:clamp(1.4rem,3.8vw,2.5rem);text-align:center;line-height:1.25;padding:clamp(8px,3vw,28px) 4px;letter-spacing:.02em;text-shadow:0 3px 0 #0005}
+  .qtext.emoji{font-size:clamp(3rem,10vw,6rem);letter-spacing:.15em}
+  .qhint{text-align:center;color:var(--mute);margin-top:-6px;font-size:.95rem}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:620px){.opts{grid-template-columns:1fr}}
+  .opt{display:flex;align-items:center;gap:12px;text-align:left;background:#ffffff14;border:2px solid #ffffff33;border-radius:14px;
+       padding:12px 14px;font-weight:600;font-size:clamp(1rem,2.3vw,1.3rem);line-height:1.2;transition:transform .1s,border-color .1s,background .2s}
+  .opt b{font-family:var(--title);font-weight:400;flex:none;width:38px;height:38px;border-radius:10px;background:var(--gold);color:#1a1200;display:grid;place-items:center;font-size:1.2rem}
+  .opt:hover:not(:disabled){border-color:var(--gold);transform:translateY(-2px)}
+  .opt:disabled{cursor:default}
+  .opt.good{background:var(--ok);color:#00230f;border-color:#fff;animation:pulse .6s 2}
+  .opt.bad{background:var(--ko);color:#2a0008;border-color:#fff;animation:shake .4s}
+  .opt.dim{opacity:.35}
+  .ans{display:none;text-align:center;background:#ffffff14;border:2px dashed var(--gold);border-radius:16px;padding:14px}
+  .ans.show{display:block;animation:pop .3s}
+  .ans small{display:block;color:var(--mute);font-weight:600;margin-bottom:2px}
+  .ans strong{font-family:var(--title);font-size:clamp(1.5rem,4vw,2.6rem);color:var(--gold);font-weight:400;letter-spacing:.03em}
+  .judge{display:none;gap:8px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+  .judge.show{display:grid}
+  .jp{background:#00000030;border-left:6px solid var(--c);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+  .jp .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .jp button{width:44px;height:44px;border-radius:12px;background:#ffffff1a;font-size:1.3rem;font-weight:700;transition:transform .1s}
+  .jp button:hover{transform:scale(1.1)}
+  .jp .y.on{background:var(--ok);color:#00230f}
+  .jp .n.on{background:var(--ko);color:#2a0008}
+  .foot{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .chip{display:flex;align-items:center;gap:8px;background:#ffffff14;border:3px solid #ffffff22;border-left:8px solid var(--c);
+        border-radius:14px;padding:6px 14px;font-weight:700}
+  .chip.on{background:var(--ok);color:#00230f;border-color:#fff;border-left-color:var(--c)}
+
+  /* ---------- end ---------- */
+  .end{text-align:center;padding:30px 0}
+  .end h1{font-size:clamp(2.6rem,9vw,5.5rem);color:var(--gold);text-shadow:0 5px 0 #8a5d00}
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:34px auto;max-width:700px}
+  .step{flex:1;border-radius:16px 16px 0 0;padding:14px 8px;background:linear-gradient(180deg,var(--tile-hi),var(--tile));border-top:6px solid var(--c)}
+  .step .av{font-size:clamp(2rem,6vw,3.4rem)}
+  .step .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis}
+  .step .pts{font-family:var(--title);font-size:1.8rem;color:var(--gold)}
+  .step.p1{min-height:230px}.step.p2{min-height:170px}.step.p3{min-height:120px}
+  .others{color:var(--mute);margin-bottom:24px}
+
+  /* ---------- fx ---------- */
+  .fx{position:fixed;top:-40px;pointer-events:none;z-index:99;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(115vh) rotate(var(--r))}}
+  .shake{animation:shake .4s}
+  @keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .muted-btn{font-size:1.1rem}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="modal" id="modal"></div>
+
+<script src="qrcode.js"></script>
+<script src="shared.js"></script>
+<script src="net.js"></script>
+<script>
+/* =====================================================================
+   DATI: 20 categorie x 5 domande (100 → 500 punti)
+   ===================================================================== */
+const CATEGORIES = [
+ // Formato domande: [testo, risposta esatta, [3 risposte sbagliate]]
+ {id:'cibo', em:'🍕', name:'Che Fame!', desc:'Pizza, pasta e dintorni', color:'#ff7a3d', q:[
+  ['Quale formaggio è il re della pizza Margherita?','La mozzarella',['La ricotta','Il parmigiano','Il gorgonzola']],
+  ['Quale erba aromatica è l\'ingrediente principale del pesto alla genovese?','Il basilico',['Il prezzemolo','Il rosmarino','L\'origano']],
+  ['Quali sono gli ingredienti della vera carbonara (oltre alla pasta)?','Uova, guanciale e pecorino',['Panna, pancetta e parmigiano','Uova, prosciutto e mozzarella','Pomodoro, guanciale e pecorino']],
+  ['Quale frutto secco è l\'ingrediente base del pesto trapanese?','Le mandorle',['Le noci','I pistacchi','Le nocciole']],
+  ['Quale spezia, tra le più costose al mondo, dà il colore giallo al risotto alla milanese?','Lo zafferano',['La curcuma','La paprika','La cannella']]]},
+ {id:'cinema', em:'🎬', name:'Luci, Azione!', desc:'Film e attori', color:'#e63946', q:[
+  ['Come si chiama il pagliaccio assassino del romanzo/film "It"?','Pennywise',['Joker','Chucky','Freddy Krueger']],
+  ['Come si chiama il personaggio di Leonardo DiCaprio in "Titanic"?','Jack Dawson',['Cal Hockley','Jack Sparrow','Rose DeWitt']],
+  ['Chi ha diretto "Pulp Fiction"?','Quentin Tarantino',['Martin Scorsese','Steven Spielberg','Christopher Nolan']],
+  ['Quale film di Roberto Benigni ha vinto 3 Oscar nel 1999?','La vita è bella',['Il postino','Johnny Stecchino','Pinocchio']],
+  ['Quale film, insieme a "Ben-Hur" e "Titanic", ha vinto 11 Oscar?','Il Signore degli Anelli: Il ritorno del re',['Avatar','Il Gladiatore','Via col vento']]]},
+ {id:'musica', em:'🎵', name:'Tutti a Ballare', desc:'Canzoni, band e note', color:'#c77dff', q:[
+  ['Quale band ha cantato "Bohemian Rhapsody"?','I Queen',['I Beatles','I Rolling Stones','I Led Zeppelin']],
+  ['Quale gruppo italiano ha vinto l\'Eurovision 2021 con "Zitti e buoni"?','I Måneskin',['I Negramaro','I Subsonica','I Pinguini Tattici Nucleari']],
+  ['Quale grande compositore scrisse la Nona Sinfonia pur essendo ormai sordo?','Ludwig van Beethoven',['Wolfgang Amadeus Mozart','Johann Sebastian Bach','Antonio Vivaldi']],
+  ['Quanti tasti ha un pianoforte standard?','88',['76','92','100']],
+  ['Come si chiama l\'opera di Puccini con protagonista Cio-Cio-San?','Madama Butterfly',['Tosca','La Bohème','Turandot']]]},
+ {id:'geo', em:'🌍', name:'Giro del Mondo', desc:'Paesi, fiumi e capitali', color:'#2ec4b6', q:[
+  ['Qual è la capitale della Spagna?','Madrid',['Barcellona','Lisbona','Siviglia']],
+  ['Qual è il fiume più lungo d\'Italia?','Il Po',['Il Tevere','L\'Adige','L\'Arno']],
+  ['Qual è lo stato più piccolo del mondo?','La Città del Vaticano',['Monaco','San Marino','Il Liechtenstein']],
+  ['Qual è la capitale dell\'Australia?','Canberra',['Sydney','Melbourne','Perth']],
+  ['Qual è il lago più profondo del mondo, in Siberia?','Il lago Bajkal',['Il lago Superiore','Il lago Vittoria','Il lago Ladoga']]]},
+ {id:'storia', em:'🏛️', name:'Macchina del Tempo', desc:'Re, battaglie e imperi', color:'#d4a373', q:[
+  ['In che anno è caduto il Muro di Berlino?','1989',['1961','1979','1991']],
+  ['In che anno Cristoforo Colombo sbarcò in America?','1492',['1415','1519','1605']],
+  ['Chi fu il primo imperatore di Roma?','Augusto',['Giulio Cesare','Nerone','Traiano']],
+  ['Quale re di Francia era soprannominato "Re Sole"?','Luigi XIV',['Luigi XVI','Napoleone','Carlo Magno']],
+  ['Su quale isola morì in esilio Napoleone?','Sant\'Elena',['Elba','Corsica','Malta']]]},
+ {id:'scienza', em:'🔬', name:'Piccoli Einstein', desc:'Scienza e natura', color:'#4cc9f0', q:[
+  ['Quanti pianeti ha il Sistema Solare?','Otto',['Sette','Nove','Dieci']],
+  ['Qual è il simbolo chimico dell\'oro?','Au',['Ag','Or','Go']],
+  ['Qual è l\'osso più lungo del corpo umano?','Il femore',['L\'omero','La tibia','Il radio']],
+  ['Qual è l\'unico metallo liquido a temperatura ambiente?','Il mercurio',['Il piombo','Lo stagno','Il rame']],
+  ['A che velocità viaggia la luce nel vuoto, circa?','300.000 km al secondo',['3.000 km al secondo','30.000 km al secondo','3.000.000 km al secondo']]]},
+ {id:'animali', em:'🐾', name:'Zoo Impazzito', desc:'Bestie strane e belle', color:'#90be6d', q:[
+  ['Qual è l\'animale terrestre più grande del mondo?','L\'elefante africano',['Il rinoceronte','L\'ippopotamo','La giraffa']],
+  ['Quante zampe ha un ragno?','Otto',['Sei','Dieci','Dodici']],
+  ['Qual è l\'unico mammifero capace di volare davvero?','Il pipistrello',['Lo scoiattolo volante','Il lemure','Il pangolino']],
+  ['Come si chiama il cucciolo del canguro?','Joey',['Cub','Kit','Pup']],
+  ['Quanti cuori ha un polpo?','Tre',['Uno','Due','Otto']]]},
+ {id:'sport', em:'⚽', name:'Fischio d\'Inizio', desc:'Campioni e record', color:'#f9c74f', q:[
+  ['Quanti giocatori per squadra scendono in campo in una partita di calcio?','Undici',['Dieci','Nove','Dodici']],
+  ['In quale sport si segna un "ace"?','Il tennis',['Il golf','La pallavolo','Il basket']],
+  ['Su quale circuito si corre il Gran Premio d\'Italia di Formula 1?','Monza',['Imola','Mugello','Misano']],
+  ['Quale nazione ha vinto più Mondiali di calcio (5)?','Il Brasile',['La Germania','L\'Italia','L\'Argentina']],
+  ['Chi era il capitano dell\'Italia campione del mondo nel 2006?','Fabio Cannavaro',['Gianluigi Buffon','Francesco Totti','Andrea Pirlo']]]},
+ {id:'tv', em:'📺', name:'Maratona Serie TV', desc:'Serie e cartoni', color:'#ff5d8f', q:[
+  ['Come si chiama il bar dove si ritrovano i protagonisti di "Friends"?','Central Perk',['MacLaren\'s Pub','Moe\'s Tavern','Luke\'s Diner']],
+  ['In "Game of Thrones", quale casata ha come simbolo il metalupo?','Stark',['Lannister','Targaryen','Baratheon']],
+  ['Nella "Casa di carta", quale nome in codice ha il fratello del Professore?','Berlino',['Tokyo','Nairobi','Denver']],
+  ['Qual è il primo gioco che si affronta in "Squid Game"?','Un, due, tre, stella!',['Il tiro alla fune','Le biglie','Il biscotto dalgona']],
+  ['In "Breaking Bad", come si chiama la catena di pollo fritto di Gus Fring?','Los Pollos Hermanos',['El Pollo Loco','Pollo Tropical','Casa del Pollo']]]},
+ {id:'giochi', em:'🎮', name:'Player One', desc:'Videogiochi di ogni epoca', color:'#7b2cbf', q:[
+  ['In quale gioco devi mangiare pallini evitando dei fantasmini colorati?','Pac-Man',['Space Invaders','Pong','Donkey Kong']],
+  ['Come si chiama il riccio blu velocissimo della Sega?','Sonic',['Crash Bandicoot','Spyro','Rayman']],
+  ['In "Among Us", come vengono chiamati i traditori che sabotano la nave?','Impostori',['Spie','Infiltrati','Mutanti']],
+  ['Come si chiama il regno in cui è ambientata la saga di "The Legend of Zelda"?','Hyrule',['Azeroth','Tamriel','Regno dei Funghi']],
+  ['In che anno è uscito il primo "Super Mario Bros." per NES?','1985',['1979','1992','1998']]]},
+ {id:'libri', em:'📖', name:'C\'era una Volta', desc:'Libri e fiabe', color:'#ffb703', q:[
+  ['Come si chiama il burattino di legno con il naso che si allunga?','Pinocchio',['Geppetto','Peter Pan','Pollicino']],
+  ['Chi ha scritto "I Promessi Sposi"?','Alessandro Manzoni',['Giacomo Leopardi','Ugo Foscolo','Giovanni Verga']],
+  ['Come si chiama il gatto sorridente di "Alice nel Paese delle Meraviglie"?','Stregatto',['Cappellaio Matto','Bianconiglio','Ghiro']],
+  ['Come si chiama il capitano che dà la caccia alla balena bianca in "Moby Dick"?','Achab',['Ismaele','Queequeg','Nemo']],
+  ['Chi ha scritto "Il Piccolo Principe"?','Antoine de Saint-Exupéry',['Jules Verne','Victor Hugo','Roald Dahl']]]},
+ {id:'hp', em:'🧙', name:'Magia & Bacchette', desc:'Harry Potter e dintorni', color:'#9d4edd', q:[
+  ['Come si chiama la scuola di magia frequentata da Harry Potter?','Hogwarts',['Beauxbatons','Durmstrang','Ilvermorny']],
+  ['Come si chiama il gufo bianco di Harry?','Edvige',['Errol','Leotordo','Fanny']],
+  ['Come si chiama lo sport magico giocato in volo sulle scope?','Il Quidditch',['Le Gobbiglie','Gli Scacchi magici','Il Duello']],
+  ['Qual è la formula per evocare un Patronus?','Expecto Patronum',['Expelliarmus','Lumos','Alohomora']],
+  ['Come si chiama il fratello di Albus Silente?','Aberforth',['Alastor','Arthur','Gellert']]]},
+ {id:'detti', em:'🗣️', name:'Parla Come Mangi', desc:'Proverbi e modi di dire', color:'#f77f00', q:[
+  ['Completa: "Chi dorme non piglia..."','...pesci',['...granchi','...gamberi','...aragoste']],
+  ['Completa: "Tra il dire e il fare c\'è di mezzo il..."','...mare',['...monte','...fiume','...cielo']],
+  ['Cosa significa "prendere due piccioni con una fava"?','Raggiungere due obiettivi con una sola azione',['Perdere una cosa e trovarne un\'altra','Spendere troppo per poco','Sbagliare strada due volte']],
+  ['Cosa significa "menare il can per l\'aia"?','Tirare le cose per le lunghe',['Portare a spasso il cane','Litigare con qualcuno','Lavorare in campagna']],
+  ['Cosa significa "essere al verde"?','Non avere più soldi',['Essere inesperti','Essere molto arrabbiati','Essere ecologisti']]]},
+ {id:'tech', em:'💻', name:'Connessi H24', desc:'Tecnologia e internet', color:'#00b4d8', q:[
+  ['Quale app di video brevi ha come logo una nota musicale?','TikTok',['Instagram','Snapchat','Twitch']],
+  ['Come si chiama l\'assistente vocale di Apple?','Siri',['Alexa','Cortana','Bixby']],
+  ['Cosa significa la sigla "www" negli indirizzi web?','World Wide Web',['Wide World Web','World Web Window','Web World Wide']],
+  ['In che anno è stato fondato YouTube?','2005',['2001','2008','2010']],
+  ['Qual era il testo del primo SMS della storia, inviato nel 1992?','"Merry Christmas"',['"Hello World"','"Ciao"','"Test"']]]},
+ {id:'arte', em:'🎨', name:'Piccoli Picasso', desc:'Pittori e capolavori', color:'#ef476f', q:[
+  ['Chi ha dipinto la Gioconda?','Leonardo da Vinci',['Raffaello','Michelangelo','Botticelli']],
+  ['Chi ha dipinto "Notte stellata"?','Vincent van Gogh',['Claude Monet','Paul Cézanne','Paul Gauguin']],
+  ['Chi ha dipinto "Guernica"?','Pablo Picasso',['Salvador Dalí','Joan Miró','Francisco Goya']],
+  ['Quale artista pop è famoso per le lattine di zuppa Campbell?','Andy Warhol',['Roy Lichtenstein','Keith Haring','Jackson Pollock']],
+  ['Quale pittore olandese ha dipinto "La ragazza con l\'orecchino di perla"?','Johannes Vermeer',['Rembrandt','Rubens','Jan van Eyck']]]},
+ {id:'mito', em:'⚡', name:'Dei & Mostri', desc:'Mitologia classica', color:'#ffd166', q:[
+  ['Chi è il dio greco del mare?','Poseidone',['Zeus','Ade','Apollo']],
+  ['Quale eroe uccise il Minotauro nel labirinto di Creta?','Teseo',['Perseo','Ercole','Achille']],
+  ['Come si chiama il cavallo alato nato dal sangue di Medusa?','Pegaso',['Bucefalo','Arion','Sleipnir']],
+  ['Quale divinità nordica, padre degli dèi, ha un solo occhio?','Odino',['Thor','Loki','Tyr']],
+  ['Come si chiamano le tre Parche (Moire) che tessono il destino degli uomini?','Cloto, Lachesi e Atropo',['Aglaia, Eufrosine e Talia','Megera, Aletto e Tisifone','Stenno, Euriale e Medusa']]]},
+ {id:'emoji', em:'🤔', name:'Indovina l\'Emoji', desc:'Film decifrati a emoji', color:'#06d6a0', emoji:true, q:[
+  ['🦁👑🌅','Il Re Leone',['Madagascar','Bambi','Tarzan']],
+  ['❄️👸⛄','Frozen',['Rapunzel','La Bella e la Bestia','Oceania']],
+  ['🚢🧊💔','Titanic',['Poseidon','Avatar','Pearl Harbor']],
+  ['🐀👨‍🍳🍝','Ratatouille',['Alla ricerca di Nemo','Cars','Up']],
+  ['🚗⏰⚡','Ritorno al futuro',['Fast & Furious','Cars','Matrix']]]},
+ {id:'strane', em:'🤯', name:'Strano ma Vero', desc:'Curiosità da non credere', color:'#ff9f1c', q:[
+  ['Quale di questi frutti è botanicamente una bacca?','La banana',['La fragola','Il lampone','La mora']],
+  ['Quale animale può dormire anche per 3 anni di fila?','La lumaca',['Il gatto','L\'orso','La rana']],
+  ['Quanto tempo impiega la luce del Sole ad arrivare sulla Terra?','Circa 8 minuti',['Circa 8 secondi','Circa 8 ore','Circa 8 giorni']],
+  ['Quale organo usa circa il 20% dell\'energia del corpo pur pesando solo il 2%?','Il cervello',['Il fegato','Il cuore','I polmoni']],
+  ['Cleopatra visse più vicina nel tempo a...','Lo sbarco sulla Luna',['La costruzione della Grande Piramide','Sono equidistanti','Nessuno: Cleopatra è un mito']]]},
+ {id:'nostalgia', em:'📼', name:'Anni 90 & 2000', desc:'Nostalgia canaglia', color:'#f15bb5', q:[
+  ['Come si chiamava il cucciolo digitale da accudire con tre pulsanti?','Tamagotchi',['Game Boy','Furby','Pokédex']],
+  ['Quale cantante ha urlato "...Baby One More Time"?','Britney Spears',['Christina Aguilera','Madonna','Shakira']],
+  ['Come si chiamava il programma di chat di Microsoft con il famoso "nudge"?','MSN Messenger',['Skype','ICQ','WhatsApp']],
+  ['In che anno l\'euro è entrato in circolazione in Italia?','2002',['1999','2000','2004']],
+  ['Chi ha vinto la prima edizione del Grande Fratello italiano (2000)?','Cristina Plevani',['Pietro Taricone','Marina La Rosa','Salvo Veneziano']]]},
+ {id:'spazio', em:'🚀', name:'Oltre le Stelle', desc:'Pianeti e astronauti', color:'#5e60ce', q:[
+  ['Quale pianeta è detto "il Pianeta Rosso"?','Marte',['Venere','Giove','Mercurio']],
+  ['Chi è stato il primo uomo a camminare sulla Luna?','Neil Armstrong',['Buzz Aldrin','Yuri Gagarin','John Glenn']],
+  ['Come si chiamava la cagnolina, primo essere vivente mandato in orbita?','Laika',['Belka','Strelka','Lassie']],
+  ['Qual è il pianeta più caldo del Sistema Solare?','Venere',['Mercurio','Marte','Giove']],
+  ['Come si chiama la luna più grande di Saturno?','Titano',['Europa','Encelado','Ganimede']]]}
+];
+const POINTS = [100,200,300,400,500];
+const TIME = 30;
+const KEY = 'jeopardy-night-v1';
+
+/* =====================================================================
+   STATO
+   ===================================================================== */
+let S = load() || fresh();
+function fresh(){ return {phase:'setup', players:[], sel:[], cats:[], used:{}, picker:0, dd:'', muted:false, nid:1}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const catById = id => CATEGORIES.find(c => c.id === id);
+
+/* =====================================================================
+   AUDIO + EFFETTI
+   ===================================================================== */
+let actx;
+function tone(seq){
+  if(S.muted) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    let t = actx.currentTime;
+    seq.forEach(([f,d,type]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type||'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t+d+.02); t += d*.9;
+    });
+  }catch(e){}
+}
+const sfx = {
+  tile:()=>tone([[523,.1],[784,.16]]),
+  ok:()=>tone([[523,.1],[659,.1],[784,.1],[1047,.25]]),
+  ko:()=>tone([[220,.18,'sawtooth'],[165,.3,'sawtooth']]),
+  dd:()=>tone([[392,.1],[523,.1],[659,.1],[784,.1],[1047,.1],[784,.1],[1047,.3]]),
+  win:()=>tone([[523,.15],[659,.15],[784,.15],[1047,.15],[784,.15],[1047,.15],[1319,.5]])
+};
+function burst(list, n=40){
+  for(let i=0;i<n;i++){
+    const e = document.createElement('div');
+    e.className = 'fx'; e.textContent = list[i % list.length];
+    e.style.left = Math.random()*100 + 'vw';
+    e.style.fontSize = (16+Math.random()*26) + 'px';
+    e.style.animationDuration = (1.8+Math.random()*2.2) + 's';
+    e.style.animationDelay = Math.random()*.5 + 's';
+    e.style.setProperty('--r', (Math.random()*720-360)+'deg');
+    document.body.appendChild(e);
+    setTimeout(()=>e.remove(), 5000);
+  }
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function render(){
+  const app = $('#app');
+  if(S.phase === 'setup') saveRoster(S.players);
+  const typed = $('#pname') ? $('#pname').value : '';
+  if(S.phase === 'setup'){ app.innerHTML = viewSetup(); if(typed){ $('#pname').value = typed; previewAv(); } }
+  else if(S.phase === 'game') app.innerHTML = viewGame();
+  else app.innerHTML = viewEnd();
+  save();
+  syncScreens();
+}
+
+function viewSetup(){
+  const canStart = S.players.length >= 1 && S.sel.length === 5;
+  const canResume = S.cats.length === 5 && S.players.length > 0 && Object.keys(S.used).length > 0;
+  return `
+  <header class="hero">
+    <a class="btn ghost small" href="index.html" style="float:left;display:inline-block">🏠 Home</a>
+    <button class="btn ghost small" style="float:right" onclick="Net.openPanel()">📱 Telefoni${Net.onlineCount ? ' (' + Net.onlineCount + ')' : ''}</button>
+    <h1>JEOPARDY NIGHT</h1>
+    <p>Aggiungi i giocatori, scegli 5 categorie su 20 e che vinca il più sgamato! 🏆</p>
+  </header>
+  <div class="setup">
+    <section class="panel">
+      <h2>👥 Giocatori</h2>
+      <form class="add-row" onsubmit="addPlayer(event)">
+        <span class="prev" id="pprev" title="Emoji assegnata">🙂</span>
+        <input id="pname" placeholder="Nome del giocatore" maxlength="16" autocomplete="off" oninput="previewAv()">
+        <button class="btn small" type="submit">Aggiungi</button>
+      </form>
+      <ul class="players">
+        ${S.players.map(p => `
+          <li style="--c:${p.color}"><button class="av" title="Cambia emoji" onclick="cycleAvatar(${p.id})">${p.av}</button><span class="nm">${esc(p.name)}</span>
+          <button class="x" title="Rimuovi" onclick="removePlayer(${p.id})">✕</button></li>`).join('')}
+      </ul>
+      ${S.players.length ? '<p class="hint">L\'emoji si sceglie in base al nome. Non ti piace? Toccala per cambiarla.</p>' : '<p class="hint">Serve almeno un giocatore (meglio due o più, ovviamente!). Prova con "Leo", "Luna", "Pizza"...</p>'}
+    </section>
+    <section class="panel">
+      <div class="cat-head">
+        <h2>🗂️ Scegli 5 categorie</h2>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="counter"><b>${S.sel.length}</b> / 5</span>
+          <button class="btn ghost small" onclick="randomCats()">🎲 Casuali</button>
+        </div>
+      </div>
+      <div class="cats">
+        ${CATEGORIES.map(c => `
+          <button class="cat ${S.sel.includes(c.id)?'on':''}" style="--cc:${c.color}" onclick="toggleCat('${c.id}')">
+            <span class="em">${c.em}</span><span class="t">${esc(c.name)}</span><span class="d">${esc(c.desc)}</span>
+          </button>`).join('')}
+      </div>
+    </section>
+  </div>
+  <div class="start-bar">
+    <button class="btn" ${canStart?'':'disabled'} onclick="startGame()">🚀 Inizia la partita</button>
+    ${canResume ? '<button class="btn ghost" onclick="resume()">↩︎ Continua partita salvata</button>' : ''}
+  </div>`;
+}
+
+function viewGame(){
+  const picker = S.players[S.picker];
+  return `
+  <div class="topbar">
+    <h1>JEOPARDY NIGHT</h1>
+    <div class="acts">
+      <a class="btn ghost small" href="index.html" style="display:inline-block">🏠</a>
+      <button class="btn ghost small" onclick="Net.openPanel()">📱 ${Net.onlineCount || ''}</button>
+      <button class="btn ghost small muted-btn" onclick="toggleMute()" title="Audio">${S.muted?'🔇':'🔊'}</button>
+      <button class="btn ghost small" onclick="finish()">🏁 Termina</button>
+      <button class="btn ghost small" onclick="newGame()">↺ Nuova partita</button>
+    </div>
+  </div>
+  <div class="turn">Tocca a <b>${picker ? picker.av+' '+esc(picker.name) : ''}</b>: scegli una casella!</div>
+  <div class="board">
+    ${S.cats.map(id => { const c = catById(id); return `
+      <div class="head" style="--cc:${c.color}"><span class="em">${c.em}</span><span class="nm">${esc(c.name)}</span></div>`; }).join('')}
+    ${POINTS.map((pt, r) => S.cats.map((id, ci) => {
+        const done = S.used[ci+'-'+r];
+        return `<button class="tile" ${done?'disabled':''} onclick="openTile(${ci},${r})">${done?'':pt}</button>`;
+      }).join('')).join('')}
+  </div>
+  <div class="score">
+    ${S.players.map((p,i) => `
+      <div class="pl ${i===S.picker?'act':''}" id="pl${p.id}" style="--c:${p.color}">
+        <div class="who"><span class="av">${p.av}</span><span class="nm">${esc(p.name)}</span></div>
+        <div class="pts ${p.score<0?'neg':''}">${p.score}</div>
+        <div class="adj"><button onclick="adjust(${p.id},-100)">−100</button><button onclick="adjust(${p.id},100)">+100</button></div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function viewEnd(){
+  const r = [...S.players].sort((a,b)=>b.score-a.score);
+  const tie = r.length>1 && r[0].score === r[1].score;
+  const slot = (p,k) => p ? `<div class="step p${k}" style="--c:${p.color}"><div class="av">${p.av}</div><div class="nm">${esc(p.name)}</div><div class="pts">${p.score}</div></div>` : '';
+  return `
+  <div class="end">
+    <h1>${tie ? 'PAREGGIO EPICO!' : '🏆 ' + esc(r[0].name.toUpperCase()) + ' VINCE!'}</h1>
+    <div class="podium">${slot(r[1],2)}${slot(r[0],1)}${slot(r[2],3)}</div>
+    ${r.length>3 ? `<p class="others">${r.slice(3).map((p,i)=>`${i+4}. ${p.av} ${esc(p.name)} (${p.score})`).join(' · ')}</p>` : ''}
+    <div class="start-bar" style="margin-bottom:0">
+      <button class="btn" onclick="rematch()">🔁 Rivincita (stesse persone)</button>
+      <button class="btn ghost" onclick="newGame(true)">Nuova partita</button>
+      <a class="btn ghost" href="index.html">🏠 Home</a>
+    </div>
+  </div>`;
+}
+
+/* =====================================================================
+   AZIONI SETUP
+   ===================================================================== */
+function addPlayer(e){
+  e.preventDefault();
+  const inp = $('#pname'), name = inp.value.trim();
+  if(!name) return;
+  const i = S.players.length;
+  S.players.push({id:S.nid++, name, av:suggestEmoji(name, S.players.map(p=>p.av)), color:COLORS[i%COLORS.length], score:0});
+  inp.value = '';
+  render(); $('#pname').focus();
+}
+function previewAv(){
+  const v = $('#pname').value.trim();
+  $('#pprev').textContent = v ? suggestEmoji(v, S.players.map(p=>p.av)) : '🙂';
+}
+function cycleAvatar(id){
+  const p = S.players.find(x => x.id === id);
+  const taken = S.players.filter(x => x.id !== id).map(x => x.av);
+  const all = [...new Set([...Object.values(NAME_EMOJI), ...POOL])].filter(e => !taken.includes(e));
+  p.av = all[(all.indexOf(p.av) + 1) % all.length];
+  render();
+}
+function removePlayer(id){ S.players = S.players.filter(p => p.id !== id); render(); }
+function toggleCat(id){
+  const i = S.sel.indexOf(id);
+  if(i >= 0) S.sel.splice(i,1);
+  else if(S.sel.length < 5) S.sel.push(id);
+  else { S.sel.shift(); S.sel.push(id); }
+  render();
+}
+function randomCats(){
+  S.sel = CATEGORIES.map(c=>c.id).sort(()=>Math.random()-.5).slice(0,5);
+  render();
+}
+function startGame(){
+  S.cats = [...S.sel];
+  S.players.forEach(p => p.score = 0);
+  S.used = {}; S.picker = Math.floor(Math.random()*S.players.length);
+  S.dd = Math.floor(Math.random()*5) + '-' + (1 + Math.floor(Math.random()*4)); // raddoppio nascosto (non sulla riga da 100)
+  S.phase = 'game';
+  render();
+}
+function resume(){ S.phase = 'game'; render(); }
+function newGame(keepPlayers){
+  if(!keepPlayers && !confirm('Vuoi davvero iniziare una nuova partita? I punteggi attuali andranno persi.')) return;
+  S.phase = 'setup'; S.used = {}; S.cats = []; S.sel = []; S.players.forEach(p => p.score = 0);
+  render();
+}
+function rematch(){ S.sel = [...S.cats]; startGame(); }
+function finish(){
+  if(confirm('Terminare la partita e mostrare il podio?')){ S.phase = 'end'; render(); sfx.win(); burst(['🎉','🏆','⭐','🎊'],60); }
+}
+function toggleMute(){ S.muted = !S.muted; render(); }
+function adjust(id, d){
+  const p = S.players.find(x=>x.id===id); p.score += d; render(); flash(id);
+}
+function flash(id){
+  const el = document.getElementById('pl'+id); if(!el) return;
+  el.classList.add('bump'); setTimeout(()=>el.classList.remove('bump'),500);
+}
+
+/* =====================================================================
+   DOMANDA (MODALE)
+   ===================================================================== */
+let M = null, timerId = null;
+
+function openTile(ci, r){
+  const c = catById(S.cats[ci]);
+  const [q,a,wrong] = c.q[r];
+  const isDD = S.dd === ci+'-'+r;
+  const opts = [a, ...wrong].map((t,i) => ({t, ok:i===0}));
+  for(let i=opts.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [opts[i],opts[j]] = [opts[j],opts[i]]; }
+  M = {ci, r, c, q, a, opts, chosen:null, remote:{}, isDD, value: POINTS[r]*(isDD?2:1), revealed:false, res:{}, t:TIME};
+  isDD ? sfx.dd() : sfx.tile();
+  if(isDD) burst(['💰','✨','⭐'],24);
+  drawModal(); startTimer();
+}
+
+function drawModal(){
+  const m = $('#modal'); m.classList.add('open');
+  m.innerHTML = `
+  <div class="card">
+    <div class="meta">
+      <span class="c">${M.c.em} ${esc(M.c.name)}</span>
+      ${M.isDD ? '<span class="dd">💰 RADDOPPIO! x2</span>' : ''}
+      <span class="v">${M.value} pt</span>
+    </div>
+    <div class="timer"><i id="tbar"></i></div>
+    <div class="qtext ${M.c.emoji?'emoji':''}">${esc(M.q)}</div>
+    ${M.c.emoji ? '<div class="qhint">Che film o cartone si nasconde dietro le emoji?</div>' : ''}
+    <div class="opts">
+      ${M.opts.map((o,i) => {
+        const cls = M.revealed ? (o.ok ? 'good' : (M.chosen === i ? 'bad' : 'dim')) : '';
+        return `<button class="opt ${cls}" ${M.revealed?'disabled':''} onclick="pick(${i})"><b>${'ABCD'[i]}</b><span>${esc(o.t)}</span></button>`;
+      }).join('')}
+    </div>
+    ${!M.revealed && S.players.some(linked) ? `
+      <div class="chips">${S.players.filter(linked).map(p => `<span class="chip ${M.remote[p.id] !== undefined ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${M.remote[p.id] !== undefined ? '✔' : '…'}</span>`).join('')}</div>
+      <div class="qhint">📱 Rispondete dai telefoni!</div>` : ''}
+    ${!M.revealed && !S.players.some(linked) && S.players[S.picker] ? `<div class="qhint">👉 Risponde <b>${S.players[S.picker].av} ${esc(S.players[S.picker].name)}</b>: tocca la risposta che credi giusta</div>` : ''}
+    <div class="ans ${M.revealed?'show':''}"><small>${M.chosen===null ? 'LA RISPOSTA ESATTA ERA' : (M.opts[M.chosen].ok ? '🎉 ESATTO!' : '❌ PECCATO! ERA')}</small>${M.chosen!==null && M.opts[M.chosen].ok ? '' : `<strong>${esc(M.a)}</strong>`}</div>
+    <div class="judge ${M.revealed?'show':''}">
+      ${S.players.map(p => `
+        <div class="jp" style="--c:${p.color}">
+          <span>${p.av}</span><span class="nm">${esc(p.name)}</span>
+          <button class="y ${M.res[p.id]==='y'?'on':''}" onclick="judge(${p.id},'y')" title="Giusta">✓</button>
+          <button class="n ${M.res[p.id]==='n'?'on':''}" onclick="judge(${p.id},'n')" title="Sbagliata">✗</button>
+        </div>`).join('')}
+    </div>
+    <div class="foot">
+      ${M.revealed
+        ? '<button class="btn" onclick="confirmQ()">Conferma e chiudi</button>'
+        : (S.players.some(linked) ? '<button class="btn" onclick="remoteReveal()">👁 Rivela</button>' : '') +
+          '<button class="btn ghost" onclick="reveal()">👀 Mostra solo la risposta</button>'}
+      <button class="btn ghost" onclick="cancelQ()">Annulla</button>
+    </div>
+  </div>`;
+  paintTimer();
+  syncScreens();
+}
+
+function startTimer(){
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    if(!M) return clearInterval(timerId);
+    if(M.t > 0){
+      M.t -= .1; paintTimer();
+      if(M.t <= 0){ M.t = 0; sfx.ko(); if(Object.keys(M.remote).length && !M.revealed) remoteReveal(); }
+      else if(Math.ceil(M.t) !== M.sec){ M.sec = Math.ceil(M.t); syncScreens(); }
+    }
+  }, 100);
+}
+function paintTimer(){
+  const b = $('#tbar'); if(!b || !M) return;
+  const f = Math.max(0, M.t / TIME);
+  b.style.transform = `scaleX(${f})`;
+  b.className = f < .2 ? 'bad' : f < .5 ? 'warn' : '';
+}
+function reveal(){ M.revealed = true; clearInterval(timerId); drawModal(); }
+/* tutti i telefoni hanno risposto (o tempo scaduto): corregge in automatico */
+function remoteReveal(){
+  if(!M || M.revealed) return;
+  M.revealed = true; clearInterval(timerId);
+  S.players.forEach(p => {
+    const a = M.remote[p.id];
+    if(a !== undefined) M.res[p.id] = M.opts[a].ok ? 'y' : 'n';
+  });
+  const who = S.players[S.picker];
+  if(who && M.remote[who.id] !== undefined) M.chosen = M.remote[who.id];
+  Object.values(M.res).includes('y') ? (sfx.ok(), burst(['🎉','✨','⭐'],18)) : sfx.ko();
+  drawModal();
+}
+function pick(i){
+  if(M.revealed) return;
+  M.chosen = i; M.revealed = true; clearInterval(timerId);
+  const who = S.players[S.picker], ok = M.opts[i].ok;
+  if(who) M.res[who.id] = ok ? 'y' : 'n';
+  ok ? (sfx.ok(), burst(['🎉','✨','⭐'],18)) : sfx.ko();
+  drawModal();
+}
+function judge(pid, v){
+  M.res[pid] = M.res[pid] === v ? undefined : v;
+  if(M.res[pid] === 'y') sfx.ok(); else if(M.res[pid] === 'n') sfx.ko();
+  drawModal();
+}
+function closeModal(){ clearInterval(timerId); M = null; const m = $('#modal'); m.classList.remove('open'); m.innerHTML = ''; syncScreens(); }
+function cancelQ(){ closeModal(); }
+
+function confirmQ(){
+  let lastWinner = null, anyOk = false;
+  S.players.forEach((p,i) => {
+    const r = M.res[p.id];
+    if(r === 'y'){ p.score += M.value; lastWinner = i; anyOk = true; }
+    else if(r === 'n'){ p.score -= M.value; }
+  });
+  S.used[M.ci+'-'+M.r] = true;
+  S.picker = anyOk ? lastWinner : (S.picker + 1) % S.players.length;
+  if(anyOk){ burst(['🎉','✨','⭐','🔥'],28); }
+  closeModal();
+  const all = Object.keys(S.used).length >= 25;
+  if(all){ S.phase = 'end'; render(); sfx.win(); burst(['🎉','🏆','⭐','🎊','🥳'],70); return; }
+  render();
+}
+
+/* =====================================================================
+   TELEFONI
+   ===================================================================== */
+const LAST = {};   // pid -> ultimo schermo inviato (per scartare i tap "vecchi")
+const linked = p => !!(p && p.pid && Net.online(p.pid));
+const hash = str => { let h = 5381; for(let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+const playerByPid = pid => S.players.find(p => p.pid === pid);
+const opt = (id, label, extra = {}) => ({id, label, ...extra});
+const waitScreen = (emoji, title, text) => ({emoji, title, text, wait:true, groups:[]});
+
+function adoptMembers(){
+  let changed = false;
+  Net.members.filter(m => m.online).forEach(m => {   // solo telefoni connessi (gli altri sono vecchi)
+    if(playerByPid(m.pid)) return;
+    const nn = norm(m.name);
+    let p = S.players.find(x => !linked(x) && norm(x.name) === nn);
+    if(!p && S.phase === 'setup'){
+      p = {id:S.nid++, name:m.name, av:suggestEmoji(m.name, S.players.map(x => x.av)), color:COLORS[S.players.length % COLORS.length], score:0};
+      S.players.push(p);
+    }
+    if(p){ p.pid = m.pid; changed = true; }
+  });
+  return changed;
+}
+
+function unlinkedScreen(){
+  const free = S.players.filter(p => !linked(p));
+  if(S.phase !== 'setup' && free.length) return {
+    emoji:'🙋', title:'Chi sei?', text:'Scegli il tuo nome tra i giocatori.',
+    groups:[{layout:'list', options:free.map(p => opt('claim:' + p.id, p.name, {emoji:p.av}))}]};
+  return waitScreen('👀', 'Spettatore', 'La partita è in corso: guarda lo schermo!');
+}
+
+function screenFor(p){
+  if(S.phase === 'setup') return waitScreen('🎉', 'Sei dentro!', 'Aspetta che l\'host faccia partire la partita.');
+  if(S.phase === 'end'){
+    const pos = [...S.players].sort((a,b) => b.score - a.score).findIndex(x => x.id === p.id) + 1;
+    return {emoji:pos === 1 ? '🏆' : '🎉', title:pos === 1 ? 'Hai vinto!' : `Sei ${pos}°`, text:`Punteggio finale: ${p.score}`, wait:true, groups:[]};
+  }
+  if(M){
+    if(M.revealed){
+      const a = M.remote[p.id];
+      if(a === undefined) return waitScreen('👀', 'Guarda lo schermo', `La risposta era: ${M.a}`);
+      const ok = M.opts[a].ok;
+      return {emoji:ok ? '✅' : '❌', title:ok ? 'Esatto!' : 'Sbagliato!', text:ok ? `+${M.value} punti` : `Era: ${M.a} (−${M.value})`, wait:true, groups:[]};
+    }
+    const a = M.remote[p.id];
+    return {emoji:M.c.em, title:`${M.c.name} · ${M.value}${M.isDD ? ' (RADDOPPIO!)' : ''}`, big:M.q, timer:Math.ceil(M.t),
+      selected:a !== undefined ? ['o:' + a] : [],
+      groups:[{layout:'list', options:M.opts.map((o,i) => opt('o:' + i, `${'ABCD'[i]} · ${o.t}`))}]};
+  }
+  // tabellone: sceglie chi ha il turno
+  const picker = S.players[S.picker];
+  if(picker && picker.id === p.id){
+    const groups = S.cats.map((id, ci) => {
+      const c = catById(id);
+      const left = POINTS.map((v, r) => ({v, r})).filter(x => !S.used[ci + '-' + x.r]);
+      return left.length ? {title:`${c.em} ${c.name}`, layout:'grid', options:left.map(x => opt(`t:${ci}-${x.r}`, String(x.v)))} : null;
+    }).filter(Boolean);
+    return {emoji:'👉', title:'Scegli una casella!', groups};
+  }
+  return waitScreen('⏳', picker ? `${picker.name} sta scegliendo…` : 'Un attimo…', 'Guarda il tabellone.');
+}
+
+function syncScreens(){
+  if(Net.status !== 'online') return;
+  const screens = {};
+  Net.members.forEach(m => {
+    const p = playerByPid(m.pid);
+    const s = p ? {...screenFor(p), me:{av:p.av, name:p.name, color:p.color, score:p.score}} : unlinkedScreen();
+    const {timer, ...core} = s;                       // il timer non cambia l'id dello schermo
+    s.sid = hash(JSON.stringify(core));
+    LAST[m.pid] = s; screens[m.pid] = s;
+  });
+  Net.push(screens, S.players.map(p => p.name));
+}
+
+function onAct(pid, d){
+  const id = String(d.id), p = playerByPid(pid);
+  if(!p){
+    if(id.startsWith('claim:')){ const t = S.players.find(x => x.id === Number(id.slice(6))); if(t && !linked(t)){ t.pid = pid; render(); } }
+    return;
+  }
+  if(S.phase !== 'game' || !LAST[pid] || d.sid !== LAST[pid].sid) return;   // tap su uno schermo ormai vecchio
+  if(M){
+    if(M.revealed || !id.startsWith('o:')) return;
+    M.remote[p.id] = Number(id.slice(2));
+    if(S.players.every(x => linked(x) && M.remote[x.id] !== undefined)) return remoteReveal();
+    drawModal();
+  }else if(id.startsWith('t:') && S.players[S.picker] && S.players[S.picker].id === p.id){
+    const [ci, r] = id.slice(2).split('-').map(Number);
+    if(!S.used[ci + '-' + r]) openTile(ci, r);
+  }
+}
+
+/* ---------- avvio ---------- */
+if(S.phase === 'setup'){
+  const r = loadRoster();               // stessi giocatori della Home
+  if(r){
+    const old = S.players;               // mantiene i telefoni già collegati
+    S.players = r.map((p,i) => ({...p, id:i+1, score:0, pid:(old.find(o => norm(o.name) === norm(p.name)) || {}).pid || null}));
+    S.nid = S.players.length + 1;
+  }
+}
+if(S.phase === 'game' && !(S.cats.length === 5 && S.players.length)) S = fresh();
+render();
+Net.start({onAct, onChange:() => { adoptMembers(); render(); }});
+</script>
+</body>
+</html>

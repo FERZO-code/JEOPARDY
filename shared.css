@@ -1,0 +1,54 @@
+/* Stili base condivisi da Home e "Chi Sei Davvero?" */
+:root{
+  --bg:#060b3a; --bg2:#0a1470; --panel:#0d1a8c; --tile:#1432c8; --tile-hi:#2a4df0;
+  --gold:#ffcf3d; --gold-d:#d99a00; --ink:#f4f6ff; --mute:#9aa6e8;
+  --ok:#2ee6a0; --ko:#ff5470; --radius:16px;
+  --title:'Anton','Impact','Arial Narrow',sans-serif;
+  --body:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  font-family:var(--body); color:var(--ink);
+  background:radial-gradient(1200px 700px at 50% -10%, var(--bg2), var(--bg) 70%) fixed;
+  min-height:100vh; overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+h1,h2,h3{font-family:var(--title);font-weight:400;letter-spacing:.03em}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+
+.btn{display:inline-block;background:var(--gold);color:#1a1200;font-weight:700;padding:12px 22px;border-radius:999px;
+     box-shadow:0 4px 0 var(--gold-d);transition:transform .08s, box-shadow .08s, filter .15s;font-size:1.05rem;text-align:center}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-d)}
+.btn:disabled{filter:grayscale(1) opacity(.45);cursor:not-allowed;transform:none;box-shadow:0 4px 0 #6b5a20}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid #ffffff33;padding:9px 16px;font-weight:600}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn.small{padding:7px 14px;font-size:.9rem}
+.btn.big{font-size:1.3rem;padding:15px 38px}
+
+.hero{text-align:center;padding:26px 0 8px}
+.hero h1{font-size:clamp(3rem,10vw,6.5rem);color:var(--gold);text-shadow:0 5px 0 #8a5d00,0 12px 30px #0008;line-height:1}
+.hero p{color:var(--mute);margin-top:10px;font-size:1.1rem}
+
+.panel{background:#0b1568cc;border:2px solid #ffffff1a;border-radius:var(--radius);padding:18px;backdrop-filter:blur(4px)}
+.panel h2{font-size:1.5rem;margin-bottom:12px;color:var(--gold)}
+.add-row{display:flex;gap:8px}
+.add-row input{flex:1;min-width:0;background:#050a3a;border:2px solid #ffffff2a;border-radius:12px;color:var(--ink);padding:11px 14px;font:inherit;font-size:1.05rem}
+.add-row input:focus{outline:none;border-color:var(--gold)}
+.add-row .prev{display:grid;place-items:center;font-size:1.7rem;min-width:46px;background:#050a3a;border:2px solid #ffffff2a;border-radius:12px}
+.players{list-style:none;padding:0;margin-top:14px;display:grid;gap:8px}
+.players li{display:flex;align-items:center;gap:10px;background:#ffffff0f;border-left:6px solid var(--c);padding:8px 10px;border-radius:12px;font-weight:600}
+.players .av{font-size:1.6rem;background:none;padding:0 2px;line-height:1;transition:transform .15s}
+.players .av:hover{transform:scale(1.25) rotate(-8deg)}
+.players .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.players .x{background:none;color:var(--mute);font-size:1.2rem;padding:2px 8px;border-radius:8px}
+.players .x:hover{color:var(--ko)}
+.hint{color:var(--mute);font-size:.95rem;margin-top:12px}
+
+.fx{position:fixed;top:-40px;pointer-events:none;z-index:99;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(var(--r))}}
+@keyframes pop{from{transform:scale(.7);opacity:0}}
+@keyframes pulse{50%{transform:scale(1.07)}}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}

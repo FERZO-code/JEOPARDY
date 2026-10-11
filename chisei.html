@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi Sei Davvero?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  :root{--pink:#ff3d81;--violet:#7b2cbf}
+  body{background:radial-gradient(1100px 700px at 50% -10%, #5b1bb0, var(--bg) 70%) fixed}
+  .hero h1{color:var(--gold)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .topbar h1{font-size:1.7rem;color:var(--gold)}
+  .topbar .acts{display:flex;gap:8px}
+
+  /* ---------- setup ---------- */
+  .setup{display:grid;gap:18px;margin-top:18px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  @media (max-width:860px){.setup{grid-template-columns:1fr}}
+  .parts-list{list-style:none;padding:0;display:grid;gap:10px}
+  .parts-list li{display:flex;gap:12px;align-items:flex-start;background:#ffffff0f;border-radius:14px;padding:10px 12px}
+  .parts-list .e{font-size:1.9rem;line-height:1}
+  .parts-list b{display:block;font-family:var(--title);font-weight:400;letter-spacing:.04em;color:var(--gold);font-size:1.15rem}
+  .parts-list span{color:#d9defa;font-size:.95rem}
+  .modes{display:flex;gap:10px;margin-top:14px}
+  .seg{flex:1;background:#ffffff0f;border:2px solid #ffffff22;border-radius:14px;padding:10px;font-weight:700;display:flex;flex-direction:column;gap:2px}
+  .seg small{color:var(--mute);font-weight:500}
+  .seg.on{border-color:var(--gold);background:#ffcf3d22}
+  .start-bar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:22px 0 40px}
+
+  /* ---------- stepper ---------- */
+  .stepper{display:flex;gap:6px;margin-bottom:14px}
+  .stepper div{flex:1;text-align:center;padding:7px 4px;border-radius:12px;background:#ffffff12;font-weight:700;font-size:.85rem;color:var(--mute);
+               display:flex;flex-direction:column;gap:1px;border:2px solid transparent}
+  .stepper div b{font-size:1.15rem}
+  .stepper .done{color:var(--ok)}
+  .stepper .now{background:linear-gradient(160deg,var(--pink),var(--violet));color:#fff;border-color:var(--gold)}
+  @media (max-width:560px){.stepper div span{display:none}}
+
+  /* ---------- stage ---------- */
+  .stage{background:#0b1568cc;border:3px solid #ffffff22;border-radius:22px;padding:clamp(18px,3.5vw,38px);
+         display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;min-height:min(52vh,460px);justify-content:center;
+         animation:pop .25s}
+  .badge{font-family:var(--title);letter-spacing:.08em;color:#1a1200;background:var(--gold);padding:4px 16px;border-radius:99px;font-size:1.05rem}
+  .badge.x2{background:linear-gradient(90deg,#ff3d81,#ffb100);color:#fff;animation:pulse 1s infinite}
+  .count{color:var(--mute);font-weight:700;letter-spacing:.04em}
+  .lead{font-size:1.2rem;color:var(--mute);font-weight:600}
+  .big{font-family:var(--title);font-size:clamp(1.8rem,5.4vw,3.6rem);line-height:1.2;text-shadow:0 3px 0 #0005;letter-spacing:.02em}
+  .huge{font-size:clamp(4rem,14vw,8rem);line-height:1}
+  .rules{list-style:none;padding:0;display:grid;gap:8px;max-width:620px;text-align:left}
+  .rules li{background:#ffffff12;border-radius:12px;padding:10px 14px;font-size:1.05rem;line-height:1.3}
+  .rules li::before{content:"▸ ";color:var(--gold);font-weight:700}
+  .who-av{font-size:clamp(4rem,14vw,7rem);line-height:1}
+  .who-nm{font-family:var(--title);font-size:clamp(2rem,7vw,3.6rem);color:var(--gold)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .chip{display:flex;align-items:center;gap:8px;background:#ffffff14;border:3px solid #ffffff22;border-left:8px solid var(--c);
+        border-radius:14px;padding:10px 16px;font-weight:700;font-size:1.05rem;transition:transform .1s,background .15s}
+  .chip span{font-size:1.4rem}
+  .chip:hover{transform:translateY(-2px)}
+  .chip.on{background:var(--ok);color:#00230f;border-color:#fff;border-left-color:var(--c)}
+  .chip.win.on{background:linear-gradient(135deg,#ffcf3d,#ff9f1c);color:#1a1200}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:760px}
+  @media (max-width:560px){.opts{grid-template-columns:1fr}}
+  .opt{display:flex;align-items:center;gap:12px;text-align:left;background:#ffffff14;border:3px solid #ffffff33;border-radius:14px;
+       padding:12px 14px;font-weight:600;font-size:clamp(1rem,2.3vw,1.25rem);line-height:1.2;transition:transform .1s,border-color .1s,background .2s}
+  .opt b{font-family:var(--title);font-weight:400;flex:none;width:38px;height:38px;border-radius:10px;background:var(--gold);color:#1a1200;display:grid;place-items:center;font-size:1.2rem}
+  button.opt:hover{border-color:var(--gold);transform:translateY(-2px)}
+  .opt.good{background:var(--ok);color:#00230f;border-color:#fff;animation:pulse .6s 2}
+  .opt.dim{opacity:.4}
+  .opt.static{cursor:default}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .btn.ko{background:var(--ko);color:#2a0008;box-shadow:0 4px 0 #b3243d}
+  .timer{width:100%;max-width:640px;height:12px;background:#ffffff1f;border-radius:99px;overflow:hidden}
+  .timer i{display:block;height:100%;width:100%;background:var(--ok);transform-origin:left}
+  .timer i.warn{background:#ffb100}.timer i.bad{background:var(--ko)}
+  .word{font-family:var(--title);font-size:clamp(2.6rem,10vw,6rem);color:var(--gold);text-shadow:0 5px 0 #0006;line-height:1.05}
+  .forb{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .forb span{background:#ff547033;border:2px solid var(--ko);border-radius:99px;padding:5px 14px;font-weight:700;font-size:1.05rem}
+  .guesser{background:#00000030;border-radius:14px;padding:10px;width:100%;max-width:640px}
+  .guesser small{display:block;color:var(--mute);margin-bottom:6px;font-weight:600}
+  .guesser .chip{padding:6px 12px;font-size:.95rem}
+
+  /* ---------- classifica ---------- */
+  .board{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-top:16px}
+  .pl{background:#0b1568cc;border:3px solid transparent;border-top:6px solid var(--c);border-radius:14px;padding:8px 10px;transition:transform .15s,border-color .15s}
+  .pl.act{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 0 20px #ffcf3d55}
+  .pl .who{display:flex;gap:6px;align-items:center;font-weight:700;font-size:.95rem}
+  .pl .who .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pl .pts{font-family:var(--title);font-size:1.9rem;line-height:1.1;color:var(--ok)}
+  .pl .pts.neg{color:var(--ko)}
+
+  /* ---------- recap / finale ---------- */
+  .rank{width:100%;max-width:560px;display:grid;gap:8px}
+  .rank .row{display:flex;align-items:center;gap:12px;background:#ffffff12;border-left:8px solid var(--c);border-radius:14px;padding:10px 14px;font-weight:700;text-align:left}
+  .rank .row .pos{font-family:var(--title);font-size:1.5rem;color:var(--gold);width:28px}
+  .rank .row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank .row .d{color:var(--ok);font-size:.95rem}
+  .rank .row .d.neg{color:var(--ko)}
+  .rank .row .t{font-family:var(--title);font-size:1.6rem}
+  .end h1{font-size:clamp(2.4rem,8vw,5rem);color:var(--gold);text-shadow:0 5px 0 #8a5d00}
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;width:100%;max-width:640px;margin-top:8px}
+  .step{flex:1;border-radius:16px 16px 0 0;padding:14px 8px;background:linear-gradient(180deg,var(--pink),var(--violet));border-top:6px solid var(--c)}
+  .step .av{font-size:clamp(2rem,6vw,3.4rem)}
+  .step .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis}
+  .step .pts{font-family:var(--title);font-size:1.8rem;color:var(--gold)}
+  .step.p1{min-height:210px}.step.p2{min-height:160px}.step.p3{min-height:115px}
+  .awards{display:grid;gap:8px;width:100%;max-width:640px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .award{background:#ffffff12;border-radius:14px;padding:10px 14px;text-align:left;display:flex;gap:10px;align-items:center}
+  .award .e{font-size:2rem}
+  .award b{display:block;color:var(--gold);font-family:var(--title);font-weight:400;letter-spacing:.04em}
+  .award span{font-size:.92rem;color:#d9defa}
+  .titles{color:var(--mute);max-width:640px;font-size:.95rem;line-height:1.5}
+
+  /* ---------- countdown ---------- */
+  .cd{position:fixed;inset:0;display:none;place-items:center;text-align:center;background:#02051add;z-index:60;
+      font-family:var(--title);font-size:clamp(4rem,24vw,13rem);color:var(--gold);text-shadow:0 8px 0 #8a5d00;padding:20px;line-height:1.05}
+  .cd.on{display:grid}
+  .cd.pop{animation:pop .3s}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="cd" id="cd"></div>
+
+<script src="qrcode.js"></script>
+<script src="shared.js"></script>
+<script src="net.js"></script>
+<script>
+const { esc, shuffle, tone, burst } = Party;
+const $ = s => document.querySelector(s);
+const KEY = 'chisei-v1';
+
+/* =====================================================================
+   CONTENUTI
+   ===================================================================== */
+const PARTS = [
+  {n:1, em:'👆', name:'Dito Puntato', short:'Dito', mult:1, rules:[
+    'Leggo una frase tipo "Chi è il più probabile a…".',
+    'Al tre tutti puntano il dito contro l\'amico che se la merita di più.',
+    'Chi ha puntato su chi ha preso più dita fa 1 punto. Il più indicato si prende il titolo!']},
+  {n:2, em:'🧐', name:'Quanto Mi Conosci?', short:'Conosci', mult:1, rules:[
+    'A turno, un giocatore prende il telefono e risponde in segreto a una domanda su di sé.',
+    'Gli altri indovinano mostrando con le dita 1, 2, 3 o 4 (A, B, C, D).',
+    'Chi indovina fa 1 punto. Chi è sotto esame fa 1 punto per ogni amico che ha ingannato.']},
+  {n:3, em:'🤐', name:'Parole Proibite', short:'Parole', mult:1, rules:[
+    '60 secondi per far indovinare la parola senza dire quelle proibite (né la parola stessa!).',
+    '✅ Indovinata: +1 a te e +1 a chi ha indovinato. 🚫 Parola proibita detta: −1.',
+    'Se sei bloccato premi "Passa": nessuna penalità.']},
+  {n:4, em:'🤥', name:'Due Verità e una Bugia', short:'Finale', mult:2, rules:[
+    'Il finalista dice 3 frasi su di sé: 2 vere e 1 falsa, senza tradirsi.',
+    'Gli altri mostrano con le dita (1, 2 o 3) quale credono sia la bugia.',
+    'FINALE A PUNTI DOPPI: chi scova la bugia fa +2, chi inganna fa +2 per ogni amico fregato!']}
+];
+
+const PROMPTS = [
+  'addormentarsi durante un film','dimenticarsi il compleanno di qualcuno','arrivare in ritardo al proprio matrimonio',
+  'vincere alla lotteria e sparire dalla circolazione','mangiare una pizza intera da solo','piangere guardando un cartone animato',
+  'passare una giornata intera in pigiama','litigare con un vigile urbano','perdersi con Google Maps acceso',
+  'rispondere ai messaggi dopo tre giorni','diventare famoso su TikTok','sopravvivere a un\'apocalisse zombie',
+  'finire nei guai per una cosa stupidissima','mettersi a ballare in mezzo alla strada','spendere tutto lo stipendio in una sera',
+  'dire "arrivo tra 5 minuti" ed essere ancora a casa','fare un tatuaggio di cui pentirsi','parlare con il proprio animale come se capisse',
+  'rompere il telefono nel modo più stupido','innamorarsi di qualcuno conosciuto in vacanza','diventare milionario',
+  'restare chiuso fuori casa','mandare un messaggio alla persona sbagliata','vedere un\'intera serie TV in un weekend',
+  'cantare a squarciagola in macchina','adottare dieci gatti','rovinare una sorpresa per troppa foga',
+  'scappare urlando da un\'ape','dire una cosa imbarazzante davanti ai suoceri','guidare come un pilota di Formula 1',
+  'cambiare look radicalmente in una notte','trasferirsi dall\'altra parte del mondo','sbagliare il nome di qualcuno più volte',
+  'vincere un concorso di mangiate','diventare una star di Hollywood','organizzare il viaggio perfetto',
+  'ridere nel momento meno opportuno','addormentarsi in treno e perdere la fermata','cucinare qualcosa di immangiabile',
+  'mettersi a litigare con il navigatore',
+  'fare amicizia con il vicino di ombrellone','piangere a un matrimonio che non è il suo','dimenticare dove ha parcheggiato',
+  'iniziare una dieta e abbandonarla dopo un giorno','mangiare l\'ultimo pezzo senza chiedere','prendere in giro il proprio gruppo di amici',
+  'perdere le chiavi tre volte in una settimana','fare tardi alla sveglia e dare la colpa al telefono','finire un libro in una notte',
+  'comprare una cosa inutile in offerta','dire "ci penso io" e non farlo','salvare la serata con una battuta',
+  'rispondere "sono quasi arrivato" mentre è ancora sotto la doccia','spoilerare un film appena uscito','diventare un influencer',
+  'farsi riconoscere da tutti in una città nuova','prendere in giro l\'accento di qualcuno','cantare nella doccia a tutto volume',
+  'rubare le patatine dal piatto di un altro','litigare per decidere dove cenare','guardare un film dell\'orrore con le mani sugli occhi',
+  'imparare una lingua nuova in un mese','fare il giro del mondo con un solo zaino','scrivere un messaggio lunghissimo per dire poco',
+  'sposarsi a Las Vegas','mettersi a fare yoga alle 6 del mattino','salvarsi da un disastro con un colpo di fortuna'
+];
+
+const QUESTIONS = [
+  ['Qual è il mio cibo preferito?',['Pizza','Pasta','Sushi','Hamburger']],
+  ['Come passerei il sabato sera perfetto?',['Divano e serie TV','In discoteca','Cena con gli amici','Videogiochi']],
+  ['Qual è la mia più grande paura?',['I ragni','Il buio','Parlare in pubblico','Restare senza batteria']],
+  ['Quale superpotere sceglierei?',['Volare','Invisibilità','Leggere nel pensiero','Teletrasporto']],
+  ['Dove vorrei vivere?',['Al mare','In montagna','In una grande città','In campagna']],
+  ['Quale animale sono io?',['Gatto pigro','Cane fedele','Gufo notturno','Scimmia scatenata']],
+  ['Cosa faccio appena sveglio?',['Guardo il telefono','Caffè!','Continuo a dormire','Doccia']],
+  ['Che viaggio preferisco?',['Relax in spiaggia','Città d\'arte','Avventura con lo zaino','Parco divertimenti']],
+  ['Qual è il mio genere di film?',['Commedia','Horror','Azione','Animazione']],
+  ['Quale app uso di più?',['Instagram','TikTok','WhatsApp','YouTube']],
+  ['Cosa non farei mai?',['Mangiare insetti','Lanciarmi col paracadute','Cantare al karaoke','Stare un giorno senza telefono']],
+  ['Quanto sono puntuale?',['Sempre in anticipo','Giusto in orario','10 minuti di ritardo','Arrivo quando arrivo']],
+  ['Qual è il mio vizio peggiore?',['Procrastinare','Mangiare troppo','Stare al telefono','Dormire troppo']],
+  ['Cosa ordinerei al bar?',['Caffè','Aperitivo','Birra','Bibita fredda']],
+  ['Quale stagione preferisco?',['Primavera','Estate','Autunno','Inverno']],
+  ['Cosa porterei su un\'isola deserta?',['Un coltello svizzero','Il telefono (con Wi-Fi!)','Un amico','Una scorta di cibo']],
+  ['Cosa canterei al karaoke?',['Un classico italiano','Un pezzo rock','Un successo pop','Un rap velocissimo']],
+  ['Come reagisco a un jumpscare?',['Urlo fortissimo','Salto sul divano','Resto impassibile','Rido nervosamente']],
+  ['Cosa farei con 1 milione di euro?',['Giro del mondo','Compro casa','Investo tutto','Lo spendo in una settimana']],
+  ['Che tipo di amico sono?',['Quello che fa ridere','Quello affidabile','Quello che organizza tutto','Quello che sparisce e ritorna']],
+  ['Quanto dormo di solito?',['Meno di 6 ore','7-8 ore','Più di 9 ore','Dove capita']],
+  ['Qual è il mio punto debole?',['I dolci','Lo shopping','I videogiochi','Le serie TV']],
+  ['Come reagisco a un torto?',['Faccio finta di niente','Ne parlo subito','Mi arrabbio e basta','Mi vendico (con classe)']],
+  ['In cosa sono più bravo?',['Cucinare','Fare battute','Organizzare','Ascoltare']],
+  ['Qual era il mio sogno da bambino?',['Fare il calciatore','L\'astronauta','Il veterinario','Il youtuber']],
+  ['Come mi vesto di solito?',['Comodo','Elegante','Sportivo','Dipende dall\'umore']],
+  ['Cosa guardo su Netflix?',['Serie crime','Commedie','Documentari','Cartoni animati']],
+  ['Quanto sono bravo a cucinare?',['Chef stellato','Me la cavo','Riscaldo e basta','Brucio anche l\'acqua']],
+  ['Cosa mi rilassa di più?',['La musica','Una passeggiata','I videogiochi','Dormire']],
+  ['Come sono a una festa?',['L\'anima della festa','In disparte','Sul divano a mangiare','Me ne vado presto']],
+  ['Qual è il mio pasto preferito?',['Colazione','Pranzo','Cena','Merenda/spuntino']],
+  ['Se fossi un colore, sarei…',['Rosso','Blu','Verde','Giallo']],
+  ['Cosa farei con un giorno libero?',['Dormo tutto il giorno','Esco con gli amici','Gioco ai videogiochi','Viaggio in giornata']],
+  ['Qual è il mio più grande sogno?',['Girare il mondo','Diventare ricco','Una vita tranquilla','Fare qualcosa di famoso']],
+  ['Quale lavoro farei mai?',['Chirurgo','Pilota','Chef','Youtuber']],
+  ['Cosa mi fa arrabbiare di più?',['I ritardatari','Il rumore','La fame','Chi mi spoilera']],
+  ['Come mi muovo di solito?',['A piedi','In macchina','In bici/monopattino','Con i mezzi']],
+  ['Come tengo la mia camera?',['Perfettamente in ordine','Disordine organizzato','Un campo di battaglia','Dipende dai giorni']],
+  ['Cosa farei in un\'apocalisse zombie?',['Il leader','Il fuggitivo','Il furbo che si nasconde','Il primo a essere morso']],
+  ['Quale musica ascolto di più?',['Pop','Rap/trap','Rock','Dance/elettronica']],
+  ['Cosa spenderei un regalo in denaro?',['Vestiti','Elettronica','Cena fuori','Viaggio']],
+  ['Quando mi sento più vivo?',['Di mattina','Nel pomeriggio','La sera','A notte fonda']],
+  ['Qual è il mio modo di salutare?',['Abbraccio','Stretta di mano','Bacio sulla guancia','Cenno veloce']],
+  ['Che tipo di vacanza amo?',['Mare e relax','Montagna e natura','Città e musei','Tutto organizzato in anticipo']],
+  ['Cosa ho nel frigo più spesso?',['Avanzi','Birra/bibite','Niente!','Cibo sano']],
+  ['Come mi vedono gli altri?',['Simpatico','Serio','Misterioso','Pazzo']],
+  ['Cosa non può mancare in borsa/tasca?',['Il telefono','Le cuffie','Le chiavi','Un caricabatterie']],
+  ['Come mi comporto in coda?',['Paziente','Sbuffo','Guardo il telefono','Faccio amicizia']],
+  ['Quale talento nascosto ho?',['Cantare','Disegnare','Imitare la gente','Cucinare']]
+];
+
+const WORDS = [
+  ['Pizza',['Mozzarella','Napoli','Forno']],['Spiaggia',['Mare','Sabbia','Estate']],['Smartphone',['Telefono','Chiamare','Schermo']],
+  ['Compleanno',['Torta','Candeline','Anni']],['Vampiro',['Dracula','Sangue','Notte']],['Gelato',['Cono','Freddo','Gusto']],
+  ['Calcio',['Pallone','Gol','Squadra']],['Natale',['Albero','Regali','Babbo']],['Aeroplano',['Volare','Cielo','Aeroporto']],
+  ['Pigiama',['Dormire','Letto','Notte']],['Harry Potter',['Mago','Hogwarts','Cicatrice']],['Netflix',['Serie','Film','Abbonamento']],
+  ['Dentista',['Denti','Trapano','Bocca']],['Cappuccino',['Caffè','Latte','Colazione']],['Matrimonio',['Sposa','Anello','Chiesa']],
+  ['Supereroe',['Mantello','Poteri','Marvel']],['Karaoke',['Cantare','Microfono','Canzone']],['Palestra',['Allenarsi','Pesi','Muscoli']],
+  ['Treno',['Binari','Stazione','Biglietto']],['Pirata',['Nave','Tesoro','Occhio']],['Selfie',['Foto','Telefono','Fotocamera']],
+  ['Ombrello',['Pioggia','Bagnato','Aprire']],['Fantasma',['Spirito','Lenzuolo','Paura']],['Supermercato',['Spesa','Carrello','Cassa']],
+  ['Lunedì',['Settimana','Lavoro','Domenica']],['Vacanze',['Estate','Valigia','Viaggio']],['Barzelletta',['Ridere','Battuta','Raccontare']],
+  ['Videogioco',['Console','Joystick','Giocare']],['Pinocchio',['Naso','Bugia','Burattino']],['Cinema',['Film','Popcorn','Schermo']],
+  ['Sveglia',['Mattina','Suonare','Dormire']],['Frigorifero',['Freddo','Cibo','Cucina']],['Abbraccio',['Braccia','Stringere','Affetto']],
+  ['Tempesta',['Pioggia','Vento','Fulmine']],['Dinosauro',['Estinto','Giurassico','Preistoria']],['Spaghetti',['Pasta','Sugo','Forchetta']],
+  ['Pallavolo',['Rete','Palla','Spiaggia']],['Chitarra',['Corde','Suonare','Musica']],['Astronauta',['Spazio','Luna','Razzo']],
+  ['Tatuaggio',['Pelle','Inchiostro','Disegno']],['Shopping',['Negozio','Comprare','Vestiti']],['Zombie',['Morto','Cervello','Camminare']],
+  ['Ristorante',['Cena','Cameriere','Menù']],['Instagram',['Social','Foto','Storie']],['Caffè',['Tazzina','Espresso','Bar']],
+  ['Piscina',['Nuotare','Acqua','Costume']],['Pompiere',['Fuoco','Casco','Idrante']],['Biblioteca',['Libri','Silenzio','Leggere']],
+  ['Cartone animato',['Disegno','Bambini','Tv']],['Aperitivo',['Spritz','Stuzzichini','Sera']],['Montagna',['Neve','Sci','Alta']],
+  ['Dottore',['Medico','Ospedale','Malato']],['Gamer',['Videogiochi','Console','Giocare']],['Cappello',['Testa','Indossare','Sole']],
+  ['Scuola',['Studiare','Insegnante','Classe']],['Fidanzato',['Amore','Ragazzo','Coppia']],['Orologio',['Ora','Polso','Lancette']],
+  ['Cioccolata',['Dolce','Marrone','Cacao']],['Invisibile',['Vedere','Sparire','Nascosto']]
+];
+
+/* =====================================================================
+   STATO
+   ===================================================================== */
+let G = load() || fresh();
+function fresh(){ return {phase:'setup', players:[], mode:'fast', part:0, rounds:[], r:0, stage:'', cur:{}, start:{}, deck:[], di:0, muted:false, nid:1}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(G)); }catch(e){} }
+const mkPlayer = (p,i) => ({id:i+1, name:p.name, av:p.av, color:p.color, pid:p.pid || null, score:0, titles:[], hits:0, fooled:0, words:0});
+const linked = p => !!(p && p.pid && Net.online(p.pid));   // ha un telefono collegato
+const byId = id => G.players.find(p => p.id === id);
+const R = () => G.rounds[G.r];
+const mult = () => PARTS[G.part-1].mult;
+let T = null;
+const stopTimer = () => { clearInterval(T); T = null; };
+
+/* =====================================================================
+   FLUSSO
+   ===================================================================== */
+function lapsFor(n){ return Math.max(G.mode === 'full' ? 2 : 1, Math.ceil(4 / n)); }
+function turnOrder(){
+  const out = []; let last = null;
+  for(let l=0; l<lapsFor(G.players.length); l++){
+    const o = shuffle(G.players.map(p => p.id));
+    if(last !== null && o.length > 1 && o[0] === last) o.push(o.shift());
+    out.push(...o); last = o[o.length-1];
+  }
+  return out;
+}
+function buildRounds(n){
+  if(n === 1) return shuffle(PROMPTS).slice(0, G.mode === 'full' ? 10 : 6).map(t => ({t}));
+  const order = turnOrder();
+  if(n === 2){ const qs = shuffle(QUESTIONS); return order.map((pid,i) => ({pid, q:qs[i % qs.length]})); }
+  return order.map(pid => ({pid}));
+}
+const FIRST = {1:'q', 2:'pass', 3:'ready', 4:'ready'};
+
+function startGame(){
+  stopTimer();
+  G.players.forEach(p => { p.score = 0; p.titles = []; p.hits = 0; p.fooled = 0; p.words = 0; });
+  G.deck = shuffle(WORDS.map((_,i) => i)); G.di = 0;
+  startPart(1);
+}
+function startPart(n){
+  stopTimer();
+  G.phase = 'play'; G.part = n; G.rounds = buildRounds(n); G.r = 0; G.stage = 'intro'; G.cur = {};
+  G.start = Object.fromEntries(G.players.map(p => [p.id, p.score]));
+  render();
+}
+function firstStage(){
+  if(G.part === 2){ const r = R(); return r && linked(byId(r.pid)) ? 'pick' : 'pass'; }
+  return FIRST[G.part];
+}
+function begin(){ G.stage = firstStage(); G.cur = {}; render(); }
+function nextRound(){
+  stopTimer();
+  G.r++; G.cur = {};
+  G.stage = G.r >= G.rounds.length ? 'recap' : firstStage();
+  render();
+}
+function nextPart(){
+  if(G.part < 4) startPart(G.part + 1);
+  else { G.phase = 'final'; render(); tone([[523,.15],[659,.15],[784,.15],[1047,.15],[784,.15],[1047,.15],[1319,.5]]); burst(['🎉','🏆','⭐','🎊','🥳'],70); }
+}
+function skipPart(){ if(confirm('Saltare il resto di questa parte?')){ stopTimer(); G.stage = 'recap'; render(); } }
+function give(pid, n){ const p = byId(pid); if(p) p.score += n; }
+function tog(arr, id){ const i = arr.indexOf(id); i < 0 ? arr.push(id) : arr.splice(i,1); }
+const goStage = s => { G.stage = s; render(); };
+
+function countdown(finalText, done){
+  const el = $('#cd'); const seq = ['3','2','1', finalText]; let i = 0;
+  el.classList.add('on');
+  (function step(){
+    el.textContent = seq[i];
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    tone(i < 3 ? [[440,.15,'square']] : [[880,.4,'square']]);
+    i++;
+    if(i < seq.length) setTimeout(step, 800);
+    else setTimeout(() => { el.classList.remove('on'); done(); }, 1100);
+  })();
+}
+
+/* ---------- Parte 1 ---------- */
+function p1Count(){ countdown('PUNTATE! 👆', p1Result); }
+function votes(){ return G.cur.votes || (G.cur.votes = {}); }
+function p1Result(){
+  const tally = {};
+  Object.values(votes()).forEach(t => { tally[t] = (tally[t] || 0) + 1; });
+  const max = Math.max(0, ...Object.values(tally));
+  G.cur.tally = tally;
+  G.cur.winners = max ? Object.keys(tally).filter(id => tally[id] === max).map(Number) : [];
+  recomputeVoters();
+  goStage('result');
+}
+/* hanno puntato il vincitore: chi (da telefono) ha votato lui, più chi non ha votato dal telefono */
+function recomputeVoters(){
+  const v = votes();
+  G.cur.voters = G.players.map(p => p.id).filter(id =>
+    !G.cur.winners.includes(id) && (v[id] === undefined || G.cur.winners.includes(v[id])));
+}
+function toggleWinner(id){ tog(G.cur.winners, id); recomputeVoters(); render(); }
+function toggleVoter(id){ tog(G.cur.voters, id); render(); }
+function p1Done(){
+  G.cur.voters.forEach(id => { give(id, 1); byId(id).hits++; });
+  G.cur.winners.forEach(id => byId(id).titles.push(R().t));
+  tone([[523,.1],[659,.1],[784,.2]]); burst(['👆','🎉','⭐'], 18);
+  nextRound();
+}
+
+/* ---------- Parte 2 ---------- */
+function answers(){ return G.cur.answers || (G.cur.answers = {}); }
+function p2Pick(i){ G.cur.secret = i; G.cur.hits = []; G.cur.answers = {}; goStage('guess'); }
+function p2Reveal(){
+  G.cur.hits = G.players.filter(p => p.id !== R().pid && answers()[p.id] === G.cur.secret).map(p => p.id);
+  goStage('reveal');
+}
+function p2Count(){ countdown('MOSTRATE LE DITA! ✋', p2Reveal); }
+function toggleHit(id){ tog(G.cur.hits, id); render(); }
+function p2Done(){
+  const spot = R().pid, others = G.players.filter(p => p.id !== spot);
+  G.cur.hits.forEach(id => { give(id, 1); byId(id).hits++; });
+  const fooled = others.length - G.cur.hits.length;
+  give(spot, fooled); byId(spot).fooled += fooled;
+  tone([[523,.1],[659,.1],[784,.2]]);
+  nextRound();
+}
+
+/* ---------- Parte 3 ---------- */
+function nextWord(){ const w = WORDS[G.deck[G.di % G.deck.length]]; G.di++; return w; }
+function p3Start(){
+  stopTimer();
+  G.cur = {ok:0, bad:0, skip:0, t:60, lastOk:false, w:nextWord()};
+  G.stage = 'run'; render();
+  T = setInterval(() => {
+    G.cur.t -= .1;
+    if(G.cur.t <= 0){ G.cur.t = 0; stopTimer(); tone([[220,.3,'sawtooth'],[165,.5,'sawtooth']]); goStage('sum'); }
+    else{
+      paintTimer();
+      const sec = Math.ceil(G.cur.t);
+      if(sec !== G.cur.lastSec){ G.cur.lastSec = sec; syncScreens(); }
+    }
+  }, 100);
+}
+function p3Ok(){ const c = G.cur; c.ok++; give(R().pid, 1); byId(R().pid).words++; c.lastOk = true; c.w = nextWord(); tone([[660,.08],[880,.12]]); render(); }
+function p3Skip(){ G.cur.skip++; G.cur.lastOk = false; G.cur.w = nextWord(); render(); }
+function p3Bad(){ const c = G.cur; c.bad++; give(R().pid, -1); c.lastOk = false; c.w = nextWord(); tone([[200,.25,'sawtooth']]); render(); }
+function p3Guesser(id){ give(id, 1); byId(id).hits++; G.cur.lastOk = false; tone([[880,.1]]); render(); }
+function paintTimer(){
+  const b = $('#tbar'), s = $('#tsec'); if(!b || G.stage !== 'run') return;
+  const f = Math.max(0, G.cur.t / 60);
+  b.style.transform = `scaleX(${f})`;
+  b.className = f < .2 ? 'bad' : f < .5 ? 'warn' : '';
+  if(s) s.textContent = Math.ceil(G.cur.t);
+}
+
+/* ---------- Parte 4 ---------- */
+function p4Chips(){
+  const spot = R().pid;
+  G.cur.hits = G.cur.lie === undefined ? [] :
+    G.players.filter(p => p.id !== spot && answers()[p.id] === G.cur.lie).map(p => p.id);
+  goStage('chips');
+}
+function p4Count(){ countdown('QUAL È LA BUGIA? ✋', p4Chips); }
+function p4Start(){ G.cur.answers = {}; G.cur.hits = []; goStage('guess'); }
+function p4Done(){
+  const spot = R().pid, others = G.players.filter(p => p.id !== spot);
+  G.cur.hits.forEach(id => { give(id, 2); byId(id).hits++; });
+  const fooled = others.length - G.cur.hits.length;
+  give(spot, fooled * 2); byId(spot).fooled += fooled;
+  tone([[523,.1],[659,.1],[784,.2]]); burst(['🤥','🎭','✨'], 16);
+  nextRound();
+}
+
+/* ---------- setup / varie ---------- */
+function addPlayer(e){
+  e.preventDefault();
+  const inp = $('#pname'), name = inp.value.trim();
+  if(!name) return;
+  G.players.push(mkPlayer({name, av:suggestEmoji(name, G.players.map(p => p.av)), color:COLORS[G.players.length % COLORS.length]}, G.players.length));
+  inp.value = ''; render(); $('#pname').focus();
+}
+function previewAv(){
+  const v = $('#pname').value.trim();
+  $('#pprev').textContent = v ? suggestEmoji(v, G.players.map(p => p.av)) : '🙂';
+}
+function removePlayer(id){ G.players = G.players.filter(p => p.id !== id).map(mkPlayer); render(); }
+function cycleAvatar(id){
+  const p = byId(id), taken = G.players.filter(x => x.id !== id).map(x => x.av);
+  const all = [...new Set([...Object.values(NAME_EMOJI), ...POOL])].filter(e => !taken.includes(e));
+  p.av = all[(all.indexOf(p.av) + 1) % all.length]; render();
+}
+function setMode(m){ G.mode = m; render(); }
+function toggleMute(){ G.muted = !G.muted; Party.muted = G.muted; render(); }
+function restart(){
+  if(!confirm('Tornare alla schermata iniziale? La partita in corso andrà persa.')) return;
+  stopTimer(); G.phase = 'setup'; G.part = 0; G.stage = ''; G.rounds = []; render();
+}
+
+/* =====================================================================
+   VISTE
+   ===================================================================== */
+function render(){
+  stopIfNotRun();
+  const app = $('#app');
+  const typed = $('#pname') ? $('#pname').value : '';
+  if(G.phase === 'setup'){ saveRoster(G.players); app.innerHTML = viewSetup(); if(typed){ $('#pname').value = typed; previewAv(); } }
+  else if(G.phase === 'final') app.innerHTML = viewFinal();
+  else app.innerHTML = viewPlay();
+  paintTimer();
+  save();
+  syncScreens();
+}
+function stopIfNotRun(){ if(G.stage !== 'run') stopTimer(); }
+
+function chipRow(list, sel, fn, cls=''){
+  return `<div class="chips">${list.map(p => `
+    <button class="chip ${cls} ${sel.includes(p.id) ? 'on' : ''}" style="--c:${p.color}" onclick="${fn}(${p.id})"><span>${p.av}</span>${esc(p.name)}</button>`).join('')}</div>`;
+}
+
+function viewSetup(){
+  const n = G.players.length;
+  return `
+  <header class="hero">
+    <a class="btn ghost small" href="index.html" style="float:left">🏠 Home</a>
+    <button class="btn ghost small" style="float:right" onclick="Net.openPanel()">📱 Telefoni${Net.onlineCount ? ' (' + Net.onlineCount + ')' : ''}</button>
+    <h1>CHI SEI DAVVERO?</h1>
+    <p>4 parti, un solo vincitore e nessuna pietà tra amici 🎭</p>
+  </header>
+  <div class="setup">
+    <section class="panel">
+      <h2>👥 Giocatori</h2>
+      <form class="add-row" onsubmit="addPlayer(event)">
+        <span class="prev" id="pprev">🙂</span>
+        <input id="pname" placeholder="Nome del giocatore" maxlength="16" autocomplete="off" oninput="previewAv()">
+        <button class="btn small" type="submit">Aggiungi</button>
+      </form>
+      <ul class="players">
+        ${G.players.map(p => `
+          <li style="--c:${p.color}"><button class="av" title="Cambia emoji" onclick="cycleAvatar(${p.id})">${p.av}</button>
+          <span class="nm">${esc(p.name)}</span><button class="x" title="Rimuovi" onclick="removePlayer(${p.id})">✕</button></li>`).join('')}
+      </ul>
+      <p class="hint">${n < 2 ? 'Servono almeno 2 giocatori (meglio 3 o più!).' : n < 3 ? 'In due si gioca, ma è molto meglio in 3 o più.' : 'Siete pronti! Il telefono passerà di mano in mano.'}</p>
+      <div class="modes">
+        <button class="seg ${G.mode==='fast'?'on':''}" onclick="setMode('fast')">⚡ Veloce<small>6 domande · 1 giro</small></button>
+        <button class="seg ${G.mode==='full'?'on':''}" onclick="setMode('full')">🔥 Completa<small>10 domande · 2 giri</small></button>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>🗺️ Le 4 parti</h2>
+      <ul class="parts-list">
+        ${PARTS.map(p => `<li><span class="e">${p.em}</span><div><b>PARTE ${p.n} · ${esc(p.name)}${p.mult>1?' (punti ×2)':''}</b><span>${esc(p.rules[0])}</span></div></li>`).join('')}
+      </ul>
+    </section>
+  </div>
+  <div class="start-bar"><button class="btn big" ${n < 2 ? 'disabled' : ''} onclick="startGame()">🚀 Si parte!</button></div>`;
+}
+
+function topbar(){
+  return `<div class="topbar">
+    <h1>CHI SEI DAVVERO?</h1>
+    <div class="acts">
+      <a class="btn ghost small" href="index.html">🏠</a>
+      <button class="btn ghost small" onclick="Net.openPanel()">📱 ${Net.onlineCount || ''}</button>
+      <button class="btn ghost small" onclick="toggleMute()">${G.muted ? '🔇' : '🔊'}</button>
+      <button class="btn ghost small" onclick="skipPart()">⏭ Salta parte</button>
+      <button class="btn ghost small" onclick="restart()">↺</button>
+    </div></div>`;
+}
+function stepper(){
+  return `<div class="stepper">${PARTS.map(p => `
+    <div class="${p.n < G.part ? 'done' : p.n === G.part ? 'now' : ''}"><b>${p.n < G.part ? '✓' : p.em}</b><span>${esc(p.short)}</span></div>`).join('')}</div>`;
+}
+function board(){
+  const act = G.rounds[G.r] && G.rounds[G.r].pid;
+  return `<div class="board">${G.players.map(p => `
+    <div class="pl ${p.id === act && ['pass','pick','guess','reveal','ready','run','sum','chips'].includes(G.stage) ? 'act' : ''}" style="--c:${p.color}">
+      <div class="who"><span>${p.av}</span><span class="nm">${esc(p.name)}</span></div>
+      <div class="pts ${p.score < 0 ? 'neg' : ''}">${p.score}</div></div>`).join('')}</div>`;
+}
+
+function viewPlay(){
+  return `${topbar()}${stepper()}<main class="stage">${stageHTML()}</main>${board()}`;
+}
+
+function who(p){ return `<div class="who-av">${p.av}</div><div class="who-nm">${esc(p.name)}</div>`; }
+function progress(list){
+  const lk = list.filter(linked);
+  if(!lk.length) return '';
+  const a = answers();
+  return `<div class="chips">${lk.map(p => `<span class="chip ${a[p.id] !== undefined ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${a[p.id] !== undefined ? '✔' : '…'}</span>`).join('')}</div>`;
+}
+function counter(){ return `<div class="count">Round ${G.r+1} di ${G.rounds.length}</div>`; }
+
+function stageHTML(){
+  const P = PARTS[G.part-1], rd = R(), c = G.cur;
+  const pl = rd && rd.pid ? byId(rd.pid) : null;
+
+  if(G.stage === 'intro') return `
+    <span class="badge ${P.mult>1?'x2':''}">PARTE ${P.n} DI 4${P.mult>1?' · PUNTI DOPPI':''}</span>
+    <div class="huge">${P.em}</div>
+    <div class="big">${esc(P.name)}</div>
+    <ul class="rules">${P.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+    <button class="btn big" onclick="begin()">Si parte ▶</button>`;
+
+  if(G.stage === 'recap'){
+    const sorted = [...G.players].sort((a,b) => b.score - a.score);
+    return `
+    <span class="badge">FINE PARTE ${P.n}</span>
+    <div class="big">Classifica provvisoria</div>
+    <div class="rank">${sorted.map((p,i) => { const d = p.score - (G.start[p.id] || 0); return `
+      <div class="row" style="--c:${p.color}"><span class="pos">${i+1}</span><span>${p.av}</span><span class="nm">${esc(p.name)}</span>
+      <span class="d ${d<0?'neg':''}">${d>=0?'+':''}${d}</span><span class="t">${p.score}</span></div>`; }).join('')}</div>
+    <button class="btn big" onclick="nextPart()">${G.part < 4 ? 'Parte ' + (G.part+1) + ': ' + esc(PARTS[G.part].name) + ' ▶' : '🏆 Al verdetto finale!'}</button>`;
+  }
+
+  /* ----- Parte 1 ----- */
+  if(G.part === 1){
+    if(G.stage === 'q'){
+      const lk = G.players.filter(linked), v = votes();
+      return `
+      ${counter()}
+      <div class="lead">Chi è il più probabile a…</div>
+      <div class="big">${esc(rd.t)}?</div>
+      ${lk.length ? `<div class="chips">${lk.map(p => `<span class="chip ${v[p.id] !== undefined ? 'on' : ''}" style="--c:${p.color}"><span>${p.av}</span>${esc(p.name)} ${v[p.id] !== undefined ? '✔' : '…'}</span>`).join('')}</div>
+        <p class="hint">📱 Votate dai telefoni, oppure puntate il dito al tre.</p>` :
+        '<p class="hint">Pensateci bene. Quando siete tutti pronti, al tre puntate il dito!</p>'}
+      <div class="actions">
+        ${lk.length ? '<button class="btn big" onclick="p1Result()">👁 Rivela</button>' : ''}
+        <button class="btn ${lk.length ? 'ghost' : 'big'}" onclick="p1Count()">👆 Conto alla rovescia</button>
+      </div>`;
+    }
+    if(G.stage === 'result'){
+      const v = votes(), tally = c.tally || {};
+      const line = G.players.filter(p => tally[p.id]).sort((x,y) => tally[y.id] - tally[x.id])
+        .map(p => `${p.av} ${esc(p.name)} <b>${tally[p.id]}</b>`).join(' · ');
+      return `
+      <div class="lead">…${esc(rd.t)}</div>
+      <div class="big">Chi ha ricevuto più dita?</div>
+      ${line ? `<p class="hint">${line}</p>` : ''}
+      ${chipRow(G.players, c.winners, 'toggleWinner', 'win')}
+      <div class="lead">Chi aveva puntato il dito su ${c.winners.length > 1 ? 'di loro' : 'di lui/lei'}? (+1 punto)</div>
+      ${chipRow(G.players.filter(p => !c.winners.includes(p.id)), c.voters, 'toggleVoter')}
+      <button class="btn big" ${c.winners.length ? '' : 'disabled'} onclick="p1Done()">Conferma ✔</button>`;
+    }
+  }
+
+  /* ----- Parte 2 ----- */
+  if(G.part === 2){
+    const opts = (hl) => `<div class="opts">${rd.q[1].map((t,i) => `
+      <div class="opt static ${hl === null ? '' : (i === hl ? 'good' : 'dim')}"><b>${'ABCD'[i]}</b><span>${esc(t)}</span></div>`).join('')}</div>`;
+    if(G.stage === 'pass') return `
+      ${counter()}
+      <div class="lead">📱 Passa il telefono a</div>
+      ${who(pl)}
+      <p class="hint">Gli altri girino lo sguardo: la risposta è segreta!</p>
+      <button class="btn big" onclick="goStage('pick')">Sono ${esc(pl.name)} ▶</button>`;
+    if(G.stage === 'pick' && linked(pl)) return `
+      <div class="lead">📱 ${pl.av} ${esc(pl.name)} sta rispondendo dal telefono…</div>
+      <div class="big">${esc(rd.q[0])}</div>
+      ${opts(null)}`;
+    if(G.stage === 'pick') return `
+      <div class="lead">${pl.av} ${esc(pl.name)}, rispondi sinceramente (solo tu guardi!)</div>
+      <div class="big">${esc(rd.q[0])}</div>
+      <div class="opts">${rd.q[1].map((t,i) => `
+        <button class="opt" onclick="p2Pick(${i})"><b>${'ABCD'[i]}</b><span>${esc(t)}</span></button>`).join('')}</div>`;
+    if(G.stage === 'guess') return `
+      <div class="lead">Secondo voi, cosa ha risposto ${pl.av} ${esc(pl.name)}?</div>
+      <div class="big">${esc(rd.q[0])}</div>
+      ${opts(null)}
+      ${progress(G.players.filter(p => p.id !== pl.id))}
+      <p class="hint">Dal telefono, oppure al tre con le dita: 1 = A · 2 = B · 3 = C · 4 = D</p>
+      <div class="actions">
+        <button class="btn big" onclick="p2Reveal()">👁 Rivela</button>
+        <button class="btn ghost" onclick="p2Count()">✋ Conto alla rovescia</button>
+      </div>`;
+    if(G.stage === 'reveal') return `
+      <div class="lead">La risposta di ${pl.av} ${esc(pl.name)} era…</div>
+      <div class="big">${esc(rd.q[0])}</div>
+      ${opts(c.secret)}
+      <div class="lead">Chi ha indovinato? (+1 punto)</div>
+      ${chipRow(G.players.filter(p => p.id !== pl.id), c.hits, 'toggleHit')}
+      <button class="btn big" onclick="p2Done()">Conferma ✔</button>`;
+  }
+
+  /* ----- Parte 3 ----- */
+  if(G.part === 3){
+    if(G.stage === 'ready') return `
+      ${counter()}
+      ${who(pl)}
+      <div class="big">tocca a te!</div>
+      <p class="hint">Descrivi la parola senza dire quelle proibite. Hai 60 secondi: gli altri indovinano a voce.${linked(pl) ? ' La parola comparirà solo sul tuo telefono!' : ''}</p>
+      <button class="btn big" onclick="p3Start()">▶ Via!</button>`;
+    if(G.stage === 'run'){
+      const others = G.players.filter(p => p.id !== pl.id);
+      return `
+      <div class="timer"><i id="tbar"></i></div>
+      <div class="count">⏱ <b id="tsec">${Math.ceil(c.t)}</b>s · ✅ ${c.ok}${c.bad ? ' · 🚫 ' + c.bad : ''} · ${pl.av} ${esc(pl.name)}</div>
+      ${linked(pl) ? `
+        <div class="huge">🔒</div>
+        <div class="lead">La parola è sul telefono di ${pl.av} ${esc(pl.name)}. Gli altri indovinano a voce!</div>` : `
+        <div class="word">${esc(c.w[0])}</div>
+        <div class="forb">${c.w[1].map(f => `<span>🚫 ${esc(f)}</span>`).join('')}</div>
+        <div class="actions">
+          <button class="btn ghost" onclick="p3Skip()">⏭ Passa</button>
+          <button class="btn" onclick="p3Ok()">✅ Indovinata</button>
+          <button class="btn ko" onclick="p3Bad()">🚫 Proibita! (−1)</button>
+        </div>
+        ${c.lastOk ? `<div class="guesser"><small>Chi ha indovinato? (+1, facoltativo)</small>${chipRow(others, [], 'p3Guesser')}</div>` : ''}`}`;
+    }
+    if(G.stage === 'sum') return `
+      <div class="huge">⏰</div>
+      <div class="big">Tempo scaduto!</div>
+      <div class="lead">${pl.av} ${esc(pl.name)} ha fatto indovinare <b>${c.ok}</b> ${c.ok === 1 ? 'parola' : 'parole'}${c.bad ? ' e detto ' + c.bad + (c.bad === 1 ? ' parola proibita' : ' parole proibite') : ''}.</div>
+      <button class="btn big" onclick="nextRound()">Avanti ▶</button>`;
+  }
+
+  /* ----- Parte 4 ----- */
+  if(G.part === 4){
+    if(G.stage === 'ready') return `
+      ${counter()}
+      ${who(pl)}
+      <div class="big">tocca a te!</div>
+      <p class="hint">Pensa a 3 cose su di te: 2 vere e 1 falsa. Dille ad alta voce numerandole 1, 2, 3 senza far capire quale sia la bugia.${linked(pl) ? ' Sul telefono scegli (in segreto) qual è la bugia: i punti saranno automatici!' : ''}</p>
+      <button class="btn big" onclick="p4Start()">🎤 Le ho dette!</button>`;
+    if(G.stage === 'guess') return `
+      <div class="lead">${pl.av} ${esc(pl.name)} ha detto 3 frasi…</div>
+      <div class="big">Qual è la bugia?</div>
+      ${progress(G.players.filter(p => p.id !== pl.id))}
+      <p class="hint">Dal telefono, oppure al tre con le dita: 1, 2 o 3!</p>
+      <div class="actions">
+        <button class="btn big" onclick="p4Chips()">👁 Rivela</button>
+        <button class="btn ghost" onclick="p4Count()">✋ Conto alla rovescia</button>
+      </div>`;
+    if(G.stage === 'chips') return `
+      <div class="lead">${pl.av} ${esc(pl.name)}: svela qual era la bugia!</div>
+      <div class="big">Chi l'ha scovata? (+2 punti)</div>
+      ${chipRow(G.players.filter(p => p.id !== pl.id), c.hits, 'toggleHit')}
+      <p class="hint">${esc(pl.name)} fa +2 per ogni amico ingannato.</p>
+      <button class="btn big" onclick="p4Done()">Conferma ✔</button>`;
+  }
+  return '<p>…</p>';
+}
+
+function viewFinal(){
+  const r = [...G.players].sort((a,b) => b.score - a.score);
+  const tie = r.length > 1 && r[0].score === r[1].score;
+  const slot = (p,k) => p ? `<div class="step p${k}" style="--c:${p.color}"><div class="av">${p.av}</div><div class="nm">${esc(p.name)}</div><div class="pts">${p.score}</div></div>` : '';
+  const top = (fn) => { const s = [...G.players].sort((a,b) => fn(b) - fn(a)); return fn(s[0]) > 0 && (s.length < 2 || fn(s[0]) > fn(s[1]) || true) ? s[0] : null; };
+  const awards = [
+    [top(p => p.titles.length), '👆', 'Il Re del Dito Puntato', p => `${p.titles.length} titol${p.titles.length === 1 ? 'o' : 'i'} da "più probabile"`],
+    [top(p => p.hits), '🕵️', 'Il Detective', p => `${p.hits} indovinate in tutta la serata`],
+    [top(p => p.fooled), '🤥', 'Il Bugiardo Professionista', p => `${p.fooled} amici ingannati`],
+    [top(p => p.words), '📚', 'Il Dizionario Vivente', p => `${p.words} parole fatte indovinare`]
+  ].filter(a => a[0]);
+  const titles = G.players.flatMap(p => p.titles.map(t => `${p.av} <b>${esc(p.name)}</b>: il più probabile a ${esc(t)}`));
+  return `
+  ${topbar()}
+  <main class="stage end">
+    <h1>${tie ? 'PAREGGIO EPICO!' : '🏆 ' + esc(r[0].name.toUpperCase()) + ' VINCE!'}</h1>
+    <div class="podium">${slot(r[1],2)}${slot(r[0],1)}${slot(r[2],3)}</div>
+    ${r.length > 3 ? `<p class="titles">${r.slice(3).map((p,i) => `${i+4}. ${p.av} ${esc(p.name)} (${p.score})`).join(' · ')}</p>` : ''}
+    <div class="awards">${awards.map(([p,e,t,f]) => `<div class="award"><span class="e">${e}</span><div><b>${t}</b><span>${p.av} ${esc(p.name)} · ${f(p)}</span></div></div>`).join('')}</div>
+    ${titles.length ? `<div class="titles">${titles.slice(0, 8).join('<br>')}</div>` : ''}
+    <div class="actions">
+      <button class="btn big" onclick="startGame()">🔁 Rivincita</button>
+      <button class="btn ghost" onclick="restart2()">Cambia giocatori</button>
+      <a class="btn ghost" href="index.html">🏠 Home</a>
+    </div>
+  </main>`;
+}
+function restart2(){ G.phase = 'setup'; G.part = 0; G.stage = ''; render(); }
+
+/* =====================================================================
+   TELEFONI: cosa vede e cosa può fare ogni giocatore collegato
+   ===================================================================== */
+const LAST = {};   // pid -> ultimo schermo inviato (per scartare i tap "vecchi")
+const hash = str => { let h = 5381; for(let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+const playerByPid = pid => G.players.find(p => p.pid === pid);
+const opt = (id, label, extra = {}) => ({id, label, ...extra});
+const waitScreen = (emoji, title, text) => ({emoji, title, text, wait:true, groups:[]});
+
+function adoptMembers(){
+  let changed = false;
+  Net.members.filter(m => m.online).forEach(m => {   // solo telefoni connessi (gli altri sono vecchi)
+    if(playerByPid(m.pid)) return;
+    const nn = norm(m.name);
+    let p = G.players.find(x => !linked(x) && norm(x.name) === nn);
+    if(!p && G.phase === 'setup'){
+      p = mkPlayer({name:m.name, av:suggestEmoji(m.name, G.players.map(x => x.av)), color:COLORS[G.players.length % COLORS.length]}, G.players.length);
+      G.players.push(p);
+    }
+    if(p){ p.pid = m.pid; changed = true; }
+  });
+  return changed;
+}
+
+function unlinkedScreen(){
+  const free = G.players.filter(p => !linked(p));
+  if(G.phase !== 'setup' && free.length) return {
+    emoji:'🙋', title:'Chi sei?', text:'Scegli il tuo nome tra i giocatori.',
+    groups:[{layout:'list', options:free.map(p => opt('claim:' + p.id, p.name, {emoji:p.av}))}]};
+  return waitScreen('👀', 'Spettatore', 'La partita è in corso: guarda lo schermo!');
+}
+
+function screenFor(p){
+  if(G.phase === 'setup') return waitScreen('🎉', 'Sei dentro!', 'Aspetta che l\'host faccia partire la partita.');
+  if(G.phase === 'final'){
+    const pos = [...G.players].sort((a,b) => b.score - a.score).findIndex(x => x.id === p.id) + 1;
+    return {emoji:pos === 1 ? '🏆' : '🎉', title:pos === 1 ? 'Hai vinto!' : `Sei ${pos}°`, text:`Punteggio finale: ${p.score}`, wait:true, groups:[]};
+  }
+  const P = PARTS[G.part - 1], rd = R(), c = G.cur, st = G.stage;
+  const others = G.players.filter(x => x.id !== p.id);
+  const isSpot = !!rd && rd.pid === p.id;
+  const spot = rd && rd.pid ? byId(rd.pid) : null;
+
+  if(st === 'intro') return waitScreen(P.em, `Parte ${P.n}`, P.name);
+  if(st === 'recap') return waitScreen('📊', `Fine parte ${P.n}`, 'Guarda la classifica sullo schermo.');
+
+  if(G.part === 1){
+    if(st === 'q'){
+      const v = votes()[p.id];
+      return {emoji:'👆', title:'Chi è il più probabile a…', big:rd.t + '?', selected:v !== undefined ? ['v:' + v] : [],
+        groups:[{title:'Tocca chi se lo merita di più', layout:'grid', options:others.map(o => opt('v:' + o.id, o.name, {emoji:o.av}))}]};
+    }
+    return waitScreen('👀', 'Guarda lo schermo', 'Si contano le dita!');
+  }
+
+  if(G.part === 2){
+    if(st === 'pass') return isSpot
+      ? {emoji:'📱', title:'Tocca a te!', text:'Rispondi in segreto a una domanda su di te.', groups:[{options:[opt('go', 'Sono pronto ▶')]}]}
+      : waitScreen('🙈', `${spot.name} sta per rispondere`, 'Non sbirciare!');
+    if(st === 'pick') return isSpot
+      ? {emoji:'🧐', title:rd.q[0], text:'Rispondi sinceramente: solo tu lo vedi!',
+         groups:[{layout:'list', options:rd.q[1].map((t,i) => opt('o:' + i, `${'ABCD'[i]} · ${t}`))}]}
+      : waitScreen('🙈', `${spot.name} sta scegliendo…`, rd.q[0]);
+    if(st === 'guess') return isSpot
+      ? waitScreen('🤞', 'Gli altri stanno indovinando…', `Hai scelto: ${'ABCD'[c.secret]} · ${rd.q[1][c.secret]}`)
+      : {emoji:'🤔', title:`Cosa ha risposto ${spot.name}?`, big:rd.q[0], selected:answers()[p.id] !== undefined ? ['o:' + answers()[p.id]] : [],
+         groups:[{layout:'list', options:rd.q[1].map((t,i) => opt('o:' + i, `${'ABCD'[i]} · ${t}`))}]};
+    return waitScreen('👀', 'Guarda lo schermo', 'Vediamo chi ha indovinato!');
+  }
+
+  if(G.part === 3){
+    if(isSpot){
+      if(st === 'ready') return {emoji:'🗣️', title:'Tocca a te!', text:'Descrivi la parola senza dire quelle proibite. Hai 60 secondi.', groups:[{options:[opt('go', '▶ Via!')]}]};
+      if(st === 'run') return {emoji:'🗣️', big:c.w[0], tags:c.w[1], timer:Math.ceil(c.t), text:`✅ ${c.ok}${c.bad ? ' · 🚫 ' + c.bad : ''}`,
+        groups:[
+          {layout:'grid', options:[opt('ok', 'Indovinata', {emoji:'✅', tone:'ok'}), opt('skip', 'Passa', {emoji:'⏭', tone:'ghost'})]},
+          {options:[opt('bad', 'Ho detto una proibita (−1)', {emoji:'🚫', tone:'ko'})]},
+          c.lastOk ? {title:'Chi ha indovinato? (+1)', layout:'grid', options:others.map(o => opt('g:' + o.id, o.name, {emoji:o.av}))} : null
+        ].filter(Boolean)};
+      return waitScreen('⏰', 'Tempo scaduto!', `Hai fatto indovinare ${c.ok || 0} parole.`);
+    }
+    if(st === 'run') return {emoji:'🙋', title:'Indovina la parola!', text:`${spot.name} sta descrivendo. Rispondi a voce!`, timer:Math.ceil(c.t), wait:true, groups:[]};
+    if(st === 'ready') return waitScreen('🎤', `${spot.name} sta per descrivere…`, 'Preparati a indovinare!');
+    return waitScreen('⏰', 'Tempo scaduto!', 'Guarda lo schermo.');
+  }
+
+  if(G.part === 4){
+    if(isSpot){
+      if(st === 'ready') return {emoji:'🤥', title:'Tocca a te!', text:'Pensa a 3 frasi su di te: 2 vere e 1 falsa. Scegli (in segreto) quale sarà la bugia, poi dille ad alta voce.',
+        selected:c.lie !== undefined ? ['l:' + c.lie] : [],
+        groups:[{title:'La bugia sarà la numero…', layout:'grid', options:[0,1,2].map(n => opt('l:' + n, String(n + 1)))},
+                {options:[opt('said', '🎤 Le ho dette!', {disabled:c.lie === undefined})]}]};
+      if(st === 'guess') return waitScreen('🤞', 'Gli altri stanno votando…', c.lie !== undefined ? `La tua bugia era la numero ${c.lie + 1}.` : '');
+      return waitScreen('👀', 'Guarda lo schermo', 'Si svela la bugia!');
+    }
+    if(st === 'guess') return {emoji:'🤔', title:'Qual è la bugia?', text:`Hai ascoltato le 3 frasi di ${spot.name}?`,
+      selected:answers()[p.id] !== undefined ? ['l:' + answers()[p.id]] : [],
+      groups:[{layout:'grid', options:[0,1,2].map(n => opt('l:' + n, String(n + 1)))}]};
+    if(st === 'ready') return waitScreen('🎤', `${spot.name} sta pensando…`, 'Ascolta le 3 frasi!');
+    return waitScreen('👀', 'Guarda lo schermo', 'Si svela la bugia!');
+  }
+  return waitScreen('⏳', 'Un attimo…', '');
+}
+
+function syncScreens(){
+  if(Net.status !== 'online') return;
+  const screens = {};
+  Net.members.forEach(m => {
+    const p = playerByPid(m.pid);
+    const s = p ? {...screenFor(p), me:{av:p.av, name:p.name, color:p.color, score:p.score}} : unlinkedScreen();
+    const {timer, ...core} = s;                       // il timer non cambia l'id dello schermo
+    s.sid = hash(JSON.stringify(core));
+    LAST[m.pid] = s; screens[m.pid] = s;
+  });
+  Net.push(screens, G.players.map(p => p.name));
+}
+
+function onAct(pid, d){
+  const id = String(d.id), p = playerByPid(pid);
+  if(!p){
+    if(id.startsWith('claim:')){ const t = byId(Number(id.slice(6))); if(t && !linked(t)){ t.pid = pid; render(); } }
+    return;
+  }
+  if(G.phase !== 'play' || !LAST[pid] || d.sid !== LAST[pid].sid) return;   // tap su uno schermo ormai vecchio
+  const rd = R(), isSpot = !!rd && rd.pid === p.id, st = G.stage, c = G.cur;
+  const num = prefix => Number(id.slice(prefix.length));
+  const allIn = (list, map) => list.length > 0 && list.every(x => linked(x) && map[x.id] !== undefined);
+
+  if(G.part === 1 && st === 'q' && id.startsWith('v:')){
+    if(num('v:') === p.id) return;
+    votes()[p.id] = num('v:');
+    if(allIn(G.players, votes())) return p1Result();
+    render();
+  }else if(G.part === 2){
+    if(st === 'pass' && isSpot && id === 'go') goStage('pick');
+    else if(st === 'pick' && isSpot && id.startsWith('o:')) p2Pick(num('o:'));
+    else if(st === 'guess' && !isSpot && id.startsWith('o:')){
+      answers()[p.id] = num('o:');
+      if(allIn(G.players.filter(x => x.id !== rd.pid), answers())) return p2Reveal();
+      render();
+    }
+  }else if(G.part === 3 && isSpot){
+    if(st === 'ready' && id === 'go') p3Start();
+    else if(st === 'run'){
+      if(id === 'ok') p3Ok(); else if(id === 'skip') p3Skip(); else if(id === 'bad') p3Bad();
+      else if(id.startsWith('g:')) p3Guesser(num('g:'));
+    }
+  }else if(G.part === 4){
+    if(st === 'ready' && isSpot){
+      if(id.startsWith('l:')){ c.lie = num('l:'); render(); }
+      else if(id === 'said' && c.lie !== undefined) p4Start();
+    }else if(st === 'guess' && !isSpot && id.startsWith('l:')){
+      answers()[p.id] = num('l:');
+      if(c.lie !== undefined && allIn(G.players.filter(x => x.id !== rd.pid), answers())) return p4Chips();
+      render();
+    }
+  }
+}
+
+/* ---------- avvio ---------- */
+Party.muted = G.muted;
+if(G.phase === 'setup'){
+  const r = loadRoster();                       // stessi giocatori della Home
+  if(r){
+    const old = G.players;                      // mantiene i telefoni già collegati
+    G.players = r.map((x,i) => mkPlayer({...x, pid:(old.find(o => norm(o.name) === norm(x.name)) || {}).pid}, i));
+  }
+}
+if(G.phase === 'play' && G.stage === 'run') G.stage = 'ready';   // il timer non sopravvive a un ricaricamento
+if(G.phase === 'play' && (!G.players.length || !G.rounds.length)) G = fresh();
+render();
+Net.start({onAct, onChange:() => { adoptMembers(); render(); }});
+</script>
+</body>
+</html>
