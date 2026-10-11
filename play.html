@@ -154,9 +154,14 @@ function connect(){
           }catch(e){ localStorage.removeItem(MEKEY); me = null; showJoin(); return; }
         }else if(j.screen){
           ver = j.ver;
-          if(!spec || spec.sid !== j.screen.sid){ picked = {}; tapCount = 0; tapSent = false; }
-          spec = j.screen; busy = false; render();
-          if(navigator.vibrate && spec.buzz) navigator.vibrate(60);
+          const next = j.screen;
+          if(spec && onlyTimerChanged(spec, next)){
+            spec.timer = next.timer; paintTimerOnly();            // solo il conto alla rovescia: non ridisegnare (non chiudere la tastiera!)
+          }else{
+            if(!spec || spec.sid !== next.sid){ picked = {}; tapCount = 0; tapSent = false; }
+            spec = next; busy = false; render();
+            if(navigator.vibrate && spec.buzz) navigator.vibrate(60);
+          }
         }
       }catch(e){
         if(online){ online = false; render(); }
@@ -168,6 +173,17 @@ function connect(){
 }
 
 /* ---------- schermo ---------- */
+function onlyTimerChanged(a, b){
+  const strip = o => { const c = {...o}; delete c.timer; return JSON.stringify(c); };
+  if(strip(a) !== strip(b)) return false;
+  const has = $('.timer') !== null, want = b.timer !== undefined && b.timer !== null;
+  return has === want;
+}
+function paintTimerOnly(){
+  const el = $('.timer'); if(!el || !spec) return;
+  el.textContent = '⏱ ' + spec.timer;
+  el.classList.toggle('low', spec.timer <= 10);
+}
 function render(){
   if(!me) return;
   const s = spec;
@@ -204,9 +220,15 @@ function render(){
   }
   html += '</main>';
   if(s && s.react && s.react.length) html += `<div class="reactbar">${s.react.map(e => `<button onclick="react('${e}')">${e}</button>`).join('')}</div>`;
+  const old = document.activeElement && document.activeElement.id === 'txt' ? document.activeElement : null;
   const typed = $('#txt') ? $('#txt').value : '';
+  const selA = old ? old.selectionStart : null, selB = old ? old.selectionEnd : null;
   $('#app').innerHTML = html;
-  if(typed && $('#txt')) $('#txt').value = typed;
+  const field = $('#txt');
+  if(field){
+    if(typed) field.value = typed;
+    if(old){ field.focus({preventScroll:true}); try{ field.setSelectionRange(selA, selB); }catch(e){} }
+  }
   if(s && s.fx && lastFx !== s.sid){ lastFx = s.sid; fire(s.fx); }
 }
 
