@@ -648,14 +648,14 @@ function closeModal(){ clearInterval(timerId); M = null; const m = $('#modal'); 
 function cancelQ(){ closeModal(); }
 
 function confirmQ(){
-  let lastWinner = null, anyOk = false;
+  let anyOk = false;
   S.players.forEach((p,i) => {
     const r = M.res[p.id];
-    if(r === 'y'){ p.score += M.value; lastWinner = i; anyOk = true; }
+    if(r === 'y'){ p.score += M.value; anyOk = true; }
     else if(r === 'n'){ p.score -= M.value; }
   });
   S.used[M.ci+'-'+M.r] = true;
-  S.picker = anyOk ? lastWinner : (S.picker + 1) % S.players.length;
+  S.picker = (S.picker + 1) % S.players.length;      // il turno passa sempre al giocatore successivo
   if(anyOk){ burst(['🎉','✨','⭐','🔥'],28); }
   closeModal();
   const all = Object.keys(S.used).length >= S.cats.length * 5;
